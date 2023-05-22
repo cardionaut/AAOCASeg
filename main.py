@@ -5,6 +5,9 @@ import tkinter as tk
 import customtkinter as ctk
 from omegaconf import DictConfig
 
+from 
+from filters.nonlocal_means import NonLocalMeansFilter
+
 @hydra.main(version_base=None, config_path='.', config_name='config')
 def main(config: DictConfig) -> None:
     ctk.set_appearance_mode('dark')
@@ -13,8 +16,11 @@ def main(config: DictConfig) -> None:
     scroll_bar = ctk.CTkScrollbar(master=root, orientation='horizontal')
     scroll_bar.place(relx=0.5, rely=0.8, anchor='center')
 
-    root.mainloop()
 
+    if config.filters.plot:
+        pass
+
+    root.mainloop()
 
 if __name__ == '__main__':
     main()
