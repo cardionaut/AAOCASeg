@@ -1,0 +1,41 @@
+[tool.poetry]
+name = "AAOCASeg"
+version = "0.1.0"
+description = ""
+authors = ["yungselm", "cardionaut"]
+
+[tool.poetry.dependencies]
+python = "^3.9.0"
+loguru = "*"
+openpyxl = "*"
+matplotlib = "*"
+seaborn = "*"
+pylint = "*"
+hydra-core = "*"
+omegaconf = "*"
+numpy = "*"
+scikit-image = "*"
+pydicom = "*"
+
+[tool.poetry.group.dev.dependencies]
+autohooks = "^23.1.0"
+autohooks-plugin-black = "^22.11.0"
+autohooks-plugin-isort = "^22.8.0"
+pytest = "^7.2.1"
+black = "^22.6.0"
+isort = "^5.10.1"
+
+[tool.autohooks]
+mode = "poetry"
+pre-commit = ["autohooks.plugins.black", "autohooks.plugins.isort"]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 120
+skip-string-normalization = true
+
+[tool.isort]
+profile = "black"
