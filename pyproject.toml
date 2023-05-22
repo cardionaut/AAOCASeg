@@ -16,6 +16,7 @@ omegaconf = "*"
 numpy = "*"
 scikit-image = "*"
 pydicom = "*"
+customtkinter = "*"
 
 [tool.poetry.group.dev.dependencies]
 autohooks = "^23.1.0"
