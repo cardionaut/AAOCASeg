@@ -413,13 +413,13 @@ files = [
 
 [[package]]
 name = "httpcore"
-version = "0.17.1"
+version = "0.17.2"
 description = "A minimal low-level HTTP client."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "httpcore-0.17.1-py3-none-any.whl", hash = "sha256:628e768aaeec1f7effdc6408ba1c3cdbd7487c1fc570f7d66844ec4f003e1ca4"},
-    {file = "httpcore-0.17.1.tar.gz", hash = "sha256:caf508597c525f9b8bfff187e270666309f63115af30f7d68b16143a403c8356"},
+    {file = "httpcore-0.17.2-py3-none-any.whl", hash = "sha256:5581b9c12379c4288fe70f43c710d16060c10080617001e6b22a3b6dbcbefd36"},
+    {file = "httpcore-0.17.2.tar.gz", hash = "sha256:125f8375ab60036db632f34f4b627a9ad085048eef7cb7d2616fea0f739f98af"},
 ]
 
 [package.dependencies]
@@ -496,13 +496,13 @@ files = [
 
 [[package]]
 name = "imageio"
-version = "2.28.1"
+version = "2.29.0"
 description = "Library for reading and writing a wide range of image, video, scientific, and volumetric data formats."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "imageio-2.28.1-py3-none-any.whl", hash = "sha256:b9b456146aab459e648cde633b81bf487eb45248948f79c033e55af3bf1e6d70"},
-    {file = "imageio-2.28.1.tar.gz", hash = "sha256:5db5087be5c814ecf7e2c7d30a1a15c97eca97d8c26f31ddc54d767d4a43bce8"},
+    {file = "imageio-2.29.0-py3-none-any.whl", hash = "sha256:548e93628b4c05afb29a3a0470167ff790cc9af598b5b1bd5fbec485aaf78786"},
+    {file = "imageio-2.29.0.tar.gz", hash = "sha256:5aa207ab61aca233a7a312951ac603d618b78418eac749e3dc5035010531e25b"},
 ]
 
 [package.dependencies]
@@ -1269,6 +1269,74 @@ files = [
 plugins = ["importlib-metadata"]
 
 [[package]]
+name = "pylibjpeg"
+version = "1.4.0"
+description = "A Python framework for decoding JPEG and decoding/encoding DICOM RLE data, with a focus on supporting pydicom"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "pylibjpeg-1.4.0-py3-none-any.whl", hash = "sha256:fe60abba59ef34f32f2b71f2f39c0f1cddc96e3634432407f7454ab43452f51f"},
+    {file = "pylibjpeg-1.4.0.tar.gz", hash = "sha256:b29fb655a92cc6684a49cf21cbb37482fb47698ccef901c1e6c533a06d5650ed"},
+]
+
+[package.dependencies]
+numpy = "*"
+
+[package.extras]
+all = ["pylibjpeg-libjpeg", "pylibjpeg-openjpeg", "pylibjpeg-rle"]
+libjpeg = ["pylibjpeg-libjpeg"]
+openjpeg = ["pylibjpeg-openjpeg"]
+rle = ["pylibjpeg-rle"]
+
+[[package]]
+name = "pylibjpeg-libjpeg"
+version = "1.3.4"
+description = "A Python wrapper for libjpeg, with a focus on use as a plugin for for pylibjpeg"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "pylibjpeg-libjpeg-1.3.4.tar.gz", hash = "sha256:21786c1f1c23a2897c80751fad9cc6e7ccc906721ef334a12b6d745099c9eae7"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:603b5269947dcca2e6229101e2df6e59c8e1cecae7292f465c22fc8a1a373d63"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:e66395fb49e58f563385e14ec9513e82361eee5108d6ae63ef9c41ef90df544a"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:18aa85daaf81d9e37fb3348665558a3df96f9d62df25953e862ccc37ee540e75"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:dd2832d4e215a7c8e4c8d6ae2f6297b4213529f102bf2cbdb1fec47401d257ec"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp310-cp310-win32.whl", hash = "sha256:e18b47dfadd71abe46d0632b03dc330e5f5dece1ac28c76710ba7e23e6f332b2"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp310-cp310-win_amd64.whl", hash = "sha256:989412ac92e428431a8e24f561013ecc80f1f264747ac7ae627591968bddf45e"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:3b6ba0c93ff7caaddf5bc5125b9cbaf5e9e8d9adc48cad8ec31d5968372d6afa"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:4460a1e9ec79498be0eff9ae893cad6f6592078486700baaabe20a15b08e51fc"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:4ace3e1752d3c5411cb94a0b2df83992fc0c0d8c8843afe8ce13c1344fa8658f"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f07829de2b23ed8b9c5dee9067f97f0a9b54af1a7148e6e5387bcaf661d43856"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp311-cp311-win32.whl", hash = "sha256:cc65ab2a2226606f6b00219a550969fabede2990c7db24e9413582605aa01a56"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp311-cp311-win_amd64.whl", hash = "sha256:2cd7742b66fc6a1279d0d2e3ec85ad95842f4b412cf310f4522b3dce5cc36135"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:03349e970ffb675f2f7249fb8bc1d2b1c8afd45909bf92321af57e5ef471042d"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:3769604fe6d41ecb4c41fe896ce94371bc0a974a49251163b2f73610862d9c46"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:19863349bd276bdd93b137906e63d02866b87649261a6c6beb0dce2b1ec639cb"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:288b1baa2e598875fca400c18475a18d999df0d3a763ae8e7e4a445bfb61bf05"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp37-cp37m-win32.whl", hash = "sha256:8f6c35b43b21af2a34a11abecbedc8220728e79627adcd5e1a3a303831e2384e"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp37-cp37m-win_amd64.whl", hash = "sha256:9ef4a0dedac035ae80afe6e15530ea4761e9548a39c7af56c7730fcc5fd2bf80"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:16b61b495520135d20fd892b765ea5d9e0d71ab747c97d69288dd23bb0fdd159"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:56ec1b245d17b7a8a7469bbb03f7efd34593734e3b57d5ed378e344e533d63f5"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp38-cp38-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:ee0352a10d90effb4d984e0817fe0a35103a7d8c9dcbdbb4440a1ca243f2b86d"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e7b6635a7c84c1243c27f8ca3629da286f475daa939aba2724a23ccfe328d154"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3f8c01736277a484c54c01a1b9ee79ffe3156ef5a1fce1152959b5e95a680351"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp38-cp38-win32.whl", hash = "sha256:be5b5b0c62069fabae450336db545df2d27a432298b153563d8d10ad7c1386f4"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp38-cp38-win_amd64.whl", hash = "sha256:ef355555a66a12f92482b1089a5c6dc7af7dbd81ce03a41246b49d5c33a8fc98"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:f4de72286bcb1d6d22e99a7bf29b3c6380224c103268b42073abdb578afb0cb9"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:b110449b6a3a1e4ac480e0435a58f9a211c83606ee5bd43a0a2e87bbb91e8b88"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:0ce14de2b5da47e174d01f8f3df203073ee02581b5ffc7a528a354199f9ef972"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:cd6e91a0eb66720776ec559c844437e01a711a34d94bcb496773a6e19b9c71ae"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5d6262d8521b457e7401de5320317d527d5a2ddce5313f0245cfd33557c1aa46"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp39-cp39-win32.whl", hash = "sha256:a87c83dd9d4ad118df3ea480e2247fe99726fefb5a25bc3ec7063daef379eb6b"},
+    {file = "pylibjpeg_libjpeg-1.3.4-cp39-cp39-win_amd64.whl", hash = "sha256:072e752e5bca09b1ef6689ef7bf49c3463c94bcfff4aad2a07a50404fc4532b1"},
+]
+
+[package.dependencies]
+numpy = [
+    {version = ">=1.22", markers = "python_version >= \"3.8\" and python_version < \"3.11\""},
+    {version = ">=1.23.2", markers = "python_version >= \"3.11\""},
+]
+
+[[package]]
 name = "pylint"
 version = "2.17.4"
 description = "python code static checker"
@@ -1660,17 +1728,6 @@ numpy = "*"
 all = ["defusedxml", "fsspec", "imagecodecs (>=2023.1.23)", "lxml", "matplotlib", "zarr"]
 
 [[package]]
-name = "tk"
-version = "0.1.0"
-description = "TensorKit is a deep learning helper between Python and C++."
-optional = false
-python-versions = "*"
-files = [
-    {file = "tk-0.1.0-py3-none-any.whl", hash = "sha256:703a69ff0d5ba2bd2f7440582ad10160e4a6561595d33457dc6caa79b9bf4930"},
-    {file = "tk-0.1.0.tar.gz", hash = "sha256:60bc8923d5d35f67f5c6bd93d4f0c49d2048114ec077768f959aef36d4ed97f8"},
-]
-
-[[package]]
 name = "tomli"
 version = "2.0.1"
 description = "A lil' TOML parser"
@@ -1694,13 +1751,13 @@ files = [
 
 [[package]]
 name = "typing-extensions"
-version = "4.5.0"
+version = "4.6.1"
 description = "Backported and Experimental Type Hints for Python 3.7+"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "typing_extensions-4.5.0-py3-none-any.whl", hash = "sha256:fb33085c39dd998ac16d1431ebc293a8b3eedd00fd4a32de0ff79002c19511b4"},
-    {file = "typing_extensions-4.5.0.tar.gz", hash = "sha256:5cb5f4a79139d699607b3ef622a1dedafa84e115ab0024e0d9c044a9479ca7cb"},
+    {file = "typing_extensions-4.6.1-py3-none-any.whl", hash = "sha256:6bac751f4789b135c43228e72de18637e9a6c29d12777023a703fd1a6858469f"},
+    {file = "typing_extensions-4.6.1.tar.gz", hash = "sha256:558bc0c4145f01e6405f4a5fdbd82050bd221b119f4bf72a961a1cfd471349d6"},
 ]
 
 [[package]]
@@ -1830,4 +1887,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9.0"
-content-hash = "87bc6f973754300dc19adc43531f9fe7f43fe8dce0577e332a50d216710df88d"
+content-hash = "8ad8dfd321615946dd8e56c0ac269039b9c8a046999b6175f81b90dc8fb196f5"

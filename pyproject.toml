@@ -17,6 +17,8 @@ numpy = "*"
 scikit-image = "*"
 pydicom = "*"
 customtkinter = "*"
+pylibjpeg = "*"
+pylibjpeg-libjpeg = "*"
 
 [tool.poetry.group.dev.dependencies]
 autohooks = "^23.1.0"
