@@ -203,10 +203,10 @@ class PreProcessing:
                 diastole.append(images[i])
             if i in tags_sys:
                 systole.append(images[i])
-        for i in range(len(diastole)):  # transpose and rotate
-            diastole[i] = np.flipud(diastole[i])
-        for i in range(len(systole)):  # transpose and rotate
-            systole[i] = np.flipud(systole[i])
+        # for i in range(len(diastole)):  # transpose and rotate
+        #     diastole[i] = np.flipud(diastole[i])
+        # for i in range(len(systole)):  # transpose and rotate
+        #     systole[i] = np.flipud(systole[i])
         diastole = np.array(diastole)
         systole = np.array(systole)
         return diastole, systole
