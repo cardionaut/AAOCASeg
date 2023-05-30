@@ -1,5 +1,6 @@
 import time
 
+from loguru import logger
 from PyQt5.QtWidgets import (
     QMainWindow,
     QWidget,
@@ -99,14 +100,14 @@ class Master(QMainWindow):
         self.infoTable.setVerticalHeader(hideHeader1)
         self.infoTable.setHorizontalHeader(hideHeader2)
         self.infoTable.horizontalHeader().setStretchLastSection(True)
-
-        dicomButton.clicked.connect(readDICOM)
-        contoursButton.clicked.connect(readContours)
-        segmentButton.clicked.connect(segment)
-        splineButton.clicked.connect(newSpline)
+        
+        dicomButton.clicked.connect(lambda _: readDICOM(self))
+        contoursButton.clicked.connect(lambda _: readContours(self))
+        segmentButton.clicked.connect(lambda _: segment(self))
+        splineButton.clicked.connect(lambda _: newSpline(self))
         gatingButton.clicked.connect(self.gate)
-        writeButton.clicked.connect(writeContours)
-        reportButton.clicked.connect(report)
+        writeButton.clicked.connect(lambda _: writeContours(self))
+        reportButton.clicked.connect(lambda _: report(self))
 
         self.playButton = QPushButton()
         pixmapi1 = getattr(QStyle, 'SP_MediaPlay')
@@ -162,14 +163,14 @@ class Master(QMainWindow):
         self.setWindowTitle('DeepIVUS')
         self.setCentralWidget(centralWidget)
         self.show()
-        disclaimer = QMessageBox.about(
-            self, 'DeepIVUS', 'DeepIVUS is not FDA approved and should not be used for medical decisions.'
-        )
+        # disclaimer = QMessageBox.about(
+        #     self, 'DeepIVUS', 'DeepIVUS is not FDA approved and should not be used for medical decisions.'
+        # )
 
         # pipe = subprocess.Popen(["rm","-r","some.file"])
         # pipe.communicate() # block until process completes.
         timer = QTimer(self)
-        timer.timeout.connect(autoSave)
+        timer.timeout.connect(lambda _: autoSave(self))
         timer.start(180000)  # autosaves every 3 minutes
 
     def keyPressEvent(self, event):
@@ -221,7 +222,7 @@ class Master(QMainWindow):
 
         preprocessor = PreProcessing(self.images, self.dicom.CineRate, self.ivusPullbackRate)
         self.gated_frames_dia, self.gated_frames_sys, self.distance_frames = preprocessor()
-        if self.gated_frames_dia:
+        if self.gated_frames_dia is not None:
             self.slider.addGatedFrames(self.gated_frames_dia)
             self.useGatedBox.setChecked(True)
             self.successMessage("Diastolic frame (change with up and down arrows) extraction")

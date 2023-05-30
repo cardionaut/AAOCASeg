@@ -1,4 +1,3 @@
-from typing import Any
 import pydicom as dcm
 import numpy as np
 

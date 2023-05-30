@@ -13,14 +13,14 @@ from input_output.read_xml import read
 from input_output.write_xml import write_xml, mask_image, get_contours
 
 
-def readContours(self):
+def readContours(window):
     """Reads contours.
 
     Reads contours  saved in xml format (Echoplaque compatible) and
     displays the contours in the graphics scene
     """
 
-    if not self.image:
+    if not window.image:
         warning = QErrorMessage()
         warning.setWindowModality(Qt.WindowModal)
         warning.showMessage('Reading of contours failed. Images must be loaded prior to loading contours')
@@ -29,12 +29,12 @@ def readContours(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         fileName, _ = QFileDialog.getOpenFileName(
-            self, "QFileDialog.getOpenFileName()", "", "XML file (*.xml)", options=options
+            window, "QFileDialog.getOpenFileName()", "", "XML file (*.xml)", options=options
         )
         if fileName:
-            self.lumen, self.plaque, self.stent, self.resolution, frames = read(fileName)
+            window.lumen, window.plaque, window.stent, window.resolution, frames = read(fileName)
 
-            if len(self.lumen[0]) != self.dicom.NumberOfFrames:
+            if len(window.lumen[0]) != window.dicom.NumberOfFrames:
                 warning = QErrorMessage()
                 warning.setWindowModality(Qt.WindowModal)
                 warning.showMessage(
@@ -42,68 +42,68 @@ def readContours(self):
                 )
                 warning.exec_()
             else:
-                self.resolution = float(self.resolution[0])
-                self.lumen = self.mapToList(self.lumen)
-                self.plaque = self.mapToList(self.plaque)
-                self.stent = self.mapToList(self.stent)
-                self.contours = True
-                self.wid.setData(self.lumen, self.plaque, self.stent, self.images)
-                self.hideBox.setChecked(False)
+                window.resolution = float(window.resolution[0])
+                window.lumen = window.mapToList(window.lumen)
+                window.plaque = window.mapToList(window.plaque)
+                window.stent = window.mapToList(window.stent)
+                window.contours = True
+                window.wid.setData(window.lumen, window.plaque, window.stent, window.images)
+                window.hideBox.setChecked(False)
 
                 gatedFrames = [
-                    frame for frame in range(len(self.lumen[0])) if self.lumen[0][frame] or self.plaque[0][frame]
+                    frame for frame in range(len(window.lumen[0])) if window.lumen[0][frame] or window.plaque[0][frame]
                 ]
-                self.gatedFrames = gatedFrames
-                self.useGatedBox.setChecked(True)
-                self.slider.addGatedFrames(self.gatedFrames)
+                window.gatedFrames = gatedFrames
+                window.useGatedBox.setChecked(True)
+                window.slider.addGatedFrames(window.gatedFrames)
 
 
-def writeContours(self, fname=None):
+def writeContours(window, fname=None):
     """Writes contours to an xml file compatible with Echoplaque"""
 
-    patientName = self.infoTable.item(0, 1).text()
+    patientName = window.infoTable.item(0, 1).text()
     saveName = patientName if fname is None else fname
-    self.lumen, self.plaque = self.wid.getData()
+    window.lumen, window.plaque = window.wid.getData()
 
     # reformat data for compatibility with write_xml function
     x, y = [], []
-    for i in range(len(self.lumen[0])):
-        x.append(self.lumen[0][i])
-        x.append(self.plaque[0][i])
-        y.append(self.lumen[1][i])
-        y.append(self.plaque[1][i])
+    for i in range(len(window.lumen[0])):
+        x.append(window.lumen[0][i])
+        x.append(window.plaque[0][i])
+        y.append(window.lumen[1][i])
+        y.append(window.plaque[1][i])
 
-    if not self.segmentation and not self.contours:
-        self.errorMessage()
+    if not window.segmentation and not window.contours:
+        window.errorMessage()
     else:
-        frames = list(range(self.numberOfFrames))
+        frames = list(range(window.numberOfFrames))
 
         write_xml(
             x,
             y,
-            self.images.shape,
-            self.resolution,
-            self.ivusPullbackRate,
+            window.images.shape,
+            window.resolution,
+            window.ivusPullbackRate,
             frames,
             saveName,
         )
         if fname is None:
-            self.successMessage("Writing contours")
+            window.successMessage("Writing contours")
 
 
-def autoSave(self):
+def autoSave(window):
     """Automatically saves contours to a temporary file every 180 seconds"""
 
-    if self.contours:
+    if window.contours:
         print("Automatically saving current contours")
-        self.writeContours("temp")
+        window.writeContours("temp")
 
 
-def segment(self):
+def segment(window):
     """Segmentation and phenotyping of IVUS images"""
     pass
 
-def newSpline(self):
+def newSpline(window):
     """Create a message box to choose what spline to create"""
 
     b3 = QPushButton("lumen")
@@ -122,10 +122,10 @@ def newSpline(self):
 
     result = d.exec_()
 
-    self.wid.new(result)
-    self.hideBox.setChecked(False)
+    window.wid.new(result)
+    window.hideBox.setChecked(False)
 
-def maskToContours(self, masks):
+def maskToContours(window, masks):
     """Convert numpy mask to IVUS contours"""
 
     levels = [1.5, 2.5]
@@ -135,14 +135,14 @@ def maskToContours(self, masks):
 
     return lumen_pred, plaque_pred
 
-def contourArea(self, x, y):
+def contourArea(window, x, y):
     """Calculate contour/polygon area using Shoelace formula"""
 
     area = 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
 
     return area
 
-def computeContourMetrics(self, lumen, plaque):
+def computeContourMetrics(window, lumen, plaque):
     """Computes lumen area, plaque area and plaque burden from contours"""
 
     numberOfFrames = len(lumen[0])
@@ -152,10 +152,10 @@ def computeContourMetrics(self, lumen, plaque):
     for i in range(numberOfFrames):
         if lumen[0][i]:
             lumen_area[i] = (
-                self.contourArea(lumen[0][i], lumen[1][i]) * self.resolution**2
+                window.contourArea(lumen[0][i], lumen[1][i]) * window.resolution**2
             )
             plaque_area[i] = (
-                self.contourArea(plaque[0][i], plaque[1][i]) * self.resolution**2
+                window.contourArea(plaque[0][i], plaque[1][i]) * window.resolution**2
                 - lumen_area[i]
             )
             plaque_burden[i] = (
@@ -164,7 +164,7 @@ def computeContourMetrics(self, lumen, plaque):
 
     return (lumen_area, plaque_area, plaque_burden)
 
-def mapToList(self, contours):
+def mapToList(window, contours):
     """Converts map to list"""
 
     x, y = contours
