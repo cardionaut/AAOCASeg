@@ -1,0 +1,262 @@
+import time
+
+from PyQt5.QtWidgets import (
+    QMainWindow,
+    QWidget,
+    QApplication,
+    QHeaderView,
+    QStyle,
+    QHBoxLayout,
+    QVBoxLayout,
+    QPushButton,
+    QCheckBox,
+    QLabel,
+    QMessageBox,
+    QTableWidget,
+    QTableWidgetItem,
+    QErrorMessage,
+)
+from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtGui import QIcon
+
+from gui.display import Display
+from gui.slider import Slider, Communicate
+from input_output.read_dicom import readDICOM
+from input_output.contours import readContours, writeContours, autoSave, segment, newSpline
+from input_output.report import report
+from preprocessing.preprocessing import PreProcessing
+
+
+class Master(QMainWindow):
+    """Main Window Class
+
+    Attributes:
+        image: bool, indicates whether images have been loaded (true) or not
+        contours: bool, indicates whether contours have been loaded (true) or not
+        segmentation: bool, indicates whether segmentation has been performed (true) or not
+        lumen: tuple, contours for lumen border
+        plaque: tuple, contours for plaque border
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.image = False
+        self.contours = False
+        self.segmentation = False
+        self.lumen = ()
+        self.plaque = ()
+        self.initGUI()
+
+    def initGUI(self):
+        self.setGeometry(100, 100, 1200, 1200)
+        self.display_size = 800
+        self.addToolBar("MY Window")
+        self.showMaximized()
+
+        layout = QHBoxLayout()
+        vbox1 = QVBoxLayout()
+        vbox2 = QVBoxLayout()
+        vbox1hbox1 = QHBoxLayout()
+
+        vbox1.setContentsMargins(0, 0, 100, 100)
+        vbox2.setContentsMargins(100, 0, 0, 100)
+        vbox2hbox1 = QHBoxLayout()
+        vbox2.addLayout(vbox2hbox1)
+        layout.addLayout(vbox1)
+        layout.addLayout(vbox2)
+
+        dicomButton = QPushButton('Read DICOM')
+        contoursButton = QPushButton('Read Contours')
+        gatingButton = QPushButton('Extract Diastolic Frames')
+        segmentButton = QPushButton('Segment')
+        splineButton = QPushButton('Manual Contour')
+        writeButton = QPushButton('Write Contours')
+        reportButton = QPushButton('Write Report')
+
+        dicomButton.setToolTip("Load images in .dcm format")
+        contoursButton.setToolTip("Load saved contours in .xml format")
+        gatingButton.setToolTip("Extract end diastolic images from pullback")
+        segmentButton.setToolTip("Run deep learning based segmentation of lumen and plaque")
+        splineButton.setToolTip("Manually draw new contour for lumen, plaque or stent")
+        writeButton.setToolTip("Save contours in .xml file")
+        reportButton.setToolTip("Write report containing, lumen, plaque and vessel areas and plaque burden")
+
+        hideHeader1 = QHeaderView(Qt.Vertical)
+        hideHeader1.hide()
+        hideHeader2 = QHeaderView(Qt.Horizontal)
+        hideHeader2.hide()
+        self.infoTable = QTableWidget()
+        self.infoTable.setRowCount(8)
+        self.infoTable.setColumnCount(2)
+        self.infoTable.setItem(0, 0, QTableWidgetItem('Patient Name'))
+        self.infoTable.setItem(1, 0, QTableWidgetItem('Patient DOB'))
+        self.infoTable.setItem(2, 0, QTableWidgetItem('Patient Sex'))
+        self.infoTable.setItem(3, 0, QTableWidgetItem('Pullback Speed'))
+        self.infoTable.setItem(4, 0, QTableWidgetItem('Resolution (mm)'))
+        self.infoTable.setItem(5, 0, QTableWidgetItem('Dimensions'))
+        self.infoTable.setItem(6, 0, QTableWidgetItem('Manufacturer'))
+        self.infoTable.setItem(7, 0, QTableWidgetItem('Model'))
+        self.infoTable.setVerticalHeader(hideHeader1)
+        self.infoTable.setHorizontalHeader(hideHeader2)
+        self.infoTable.horizontalHeader().setStretchLastSection(True)
+
+        dicomButton.clicked.connect(readDICOM)
+        contoursButton.clicked.connect(readContours)
+        segmentButton.clicked.connect(segment)
+        splineButton.clicked.connect(newSpline)
+        gatingButton.clicked.connect(self.gate)
+        writeButton.clicked.connect(writeContours)
+        reportButton.clicked.connect(report)
+
+        self.playButton = QPushButton()
+        pixmapi1 = getattr(QStyle, 'SP_MediaPlay')
+        pixmapi2 = getattr(QStyle, 'SP_MediaPause')
+        self.playIcon = self.style().standardIcon(pixmapi1)
+        self.pauseIcon = self.style().standardIcon(pixmapi2)
+        self.playButton.setIcon(self.playIcon)
+        self.playButton.clicked.connect(self.play)
+        self.paused = True
+
+        self.slider = Slider(Qt.Horizontal)
+        self.slider.valueChanged[int].connect(self.changeValue)
+
+        self.hideBox = QCheckBox('Hide Contours')
+        self.hideBox.setChecked(True)
+        self.hideBox.stateChanged[int].connect(self.changeState)
+        self.useGatedBox = QCheckBox('Gated Frames')
+        self.useGatedBox.stateChanged[int].connect(self.useGated)
+        self.useGatedBox.setToolTip(
+            "When this is checked only gated frames will be segmented and only gated frames statistics will be written to the report"
+        )
+        self.useGatedBox.setToolTipDuration(200)
+
+        self.wid = Display()
+        self.c = Communicate()
+        self.c.updateBW[int].connect(self.wid.setFrame)
+        self.c.updateBool[bool].connect(self.wid.setDisplay)
+
+        self.text = QLabel()
+        self.text.setAlignment(Qt.AlignCenter)
+        self.text.setText("Frame {}".format(self.slider.value()))
+
+        vbox1.addWidget(self.wid)
+        vbox1hbox1.addWidget(self.playButton)
+        vbox1hbox1.addWidget(self.slider)
+        vbox1.addLayout(vbox1hbox1)
+        vbox1.addWidget(self.text)
+
+        vbox2.addWidget(self.hideBox)
+        vbox2.addWidget(self.useGatedBox)
+        vbox2.addWidget(dicomButton)
+        vbox2.addWidget(contoursButton)
+        vbox2.addWidget(gatingButton)
+        vbox2.addWidget(segmentButton)
+        vbox2.addWidget(splineButton)
+        vbox2.addWidget(writeButton)
+        vbox2.addWidget(reportButton)
+        vbox2hbox1.addWidget(self.infoTable)
+
+        centralWidget = QWidget()
+        centralWidget.setLayout(layout)
+        self.setWindowIcon(QIcon('Media/thumbnail.png'))
+        self.setWindowTitle('DeepIVUS')
+        self.setCentralWidget(centralWidget)
+        self.show()
+        disclaimer = QMessageBox.about(
+            self, 'DeepIVUS', 'DeepIVUS is not FDA approved and should not be used for medical decisions.'
+        )
+
+        # pipe = subprocess.Popen(["rm","-r","some.file"])
+        # pipe.communicate() # block until process completes.
+        timer = QTimer(self)
+        timer.timeout.connect(autoSave)
+        timer.start(180000)  # autosaves every 3 minutes
+
+    def keyPressEvent(self, event):
+        key = event.key()
+        if key == Qt.Key_Q:
+            self.close()
+        elif key == Qt.Key_H:
+            if not self.hideBox.isChecked():
+                self.hideBox.setChecked(True)
+            elif self.hideBox.isChecked():
+                self.hideBox.setChecked(False)
+            self.hideBox.setChecked(self.hideBox.isChecked())
+        elif key == Qt.Key_J:
+            currentFrame = self.slider.value()
+            self.slider.setValue(currentFrame + 1)
+            QApplication.processEvents()
+            time.sleep(0.1)
+            self.slider.setValue(currentFrame)
+            QApplication.processEvents()
+            time.sleep(0.1)
+            self.slider.setValue(currentFrame - 1)
+            QApplication.processEvents()
+            time.sleep(0.1)
+            self.slider.setValue(currentFrame)
+            QApplication.processEvents()
+
+    def play(self):
+        "Plays all frames until end of pullback starting from currently selected frame" ""
+        start_frame = self.slider.value()
+
+        if self.paused:
+            self.paused = False
+            self.playButton.setIcon(self.pauseIcon)
+        else:
+            self.paused = True
+            self.playButton.setIcon(self.playIcon)
+
+        for frame in range(start_frame, self.numberOfFrames):
+            if not self.paused:
+                self.slider.setValue(frame)
+                QApplication.processEvents()
+                time.sleep(0.05)
+                self.text.setText("Frame {}".format(frame))
+
+        self.playButton.setIcon(self.playIcon)
+
+    def gate(self):
+        """Extract end diastolic frames and stores in new variable"""
+
+        preprocessor = PreProcessing(self.images, self.dicom.CineRate, self.ivusPullbackRate)
+        self.gated_frames_dia, self.gated_frames_sys, self.distance_frames = preprocessor()
+        if self.gated_frames_dia:
+            self.slider.addGatedFrames(self.gated_frames_dia)
+            self.useGatedBox.setChecked(True)
+            self.successMessage("Diastolic frame (change with up and down arrows) extraction")
+        else:
+            warning = QErrorMessage()
+            warning.setWindowModality(Qt.WindowModal)
+            warning.showMessage("Diastolic frame extraction was unsuccessful")
+            warning.exec_()
+
+    def changeValue(self, value):
+        self.c.updateBW.emit(value)
+        self.wid.run()
+        self.text.setText("Frame {}".format(value))
+
+    def changeState(self, value):
+        self.c.updateBool.emit(value)
+        self.wid.run()
+
+    def useGated(self, value):
+        self.gated = value
+
+    def errorMessage(self):
+        """Helper function for errors"""
+
+        warning = QMessageBox()
+        warning.setWindowModality(Qt.WindowModal)
+        warning.setWindowTitle("Error")
+        warning.setText("Segmentation must be performed first")
+        warning.exec_()
+
+    def successMessage(self, task):
+        """Helper function for success messages"""
+
+        success = QMessageBox()
+        success.setWindowModality(Qt.WindowModal)
+        success.setWindowTitle("Status")
+        success.setText(task + " has been successfully completed")
+        success.exec_()

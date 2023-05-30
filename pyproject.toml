@@ -19,6 +19,7 @@ pydicom = "*"
 customtkinter = "*"
 pylibjpeg = "*"
 pylibjpeg-libjpeg = "*"
+pyqt5 = "*"
 
 [tool.poetry.group.dev.dependencies]
 autohooks = "^23.1.0"

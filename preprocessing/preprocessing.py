@@ -4,14 +4,17 @@ import numpy as np
 
 
 class PreProcessing:
-    def __init__(self, config) -> None:
-        self.dir_path = config.dir_path
+    def __init__(self, images, frame_rate, speed) -> None:
+        # self.dir_path = config.dir_path
+        self.images = images
+        self.frame_rate = frame_rate
+        self.speed = speed
 
     def __call__(self):
-        images, frame_rate, speed = self.DICOM_reader()
-        tags_dia = self.IVUS_gating_diastole(images, frame_rate, speed)
-        tags_sys, distance_frames = self.IVUS_gating_systole(frame_rate, speed, tags_dia)
-        dia, sys = self.stack_generator(images, tags_dia, tags_sys)
+        # images, frame_rate, speed = self.DICOM_reader()
+        tags_dia = self.IVUS_gating_diastole()
+        tags_sys, distance_frames = self.IVUS_gating_systole(tags_dia)
+        dia, sys = self.stack_generator(tags_dia, tags_sys)
 
         return dia, sys, distance_frames
 
@@ -27,24 +30,24 @@ class PreProcessing:
         return images, frame_rate, speed
 
 
-    def IVUS_gating_diastole(self, images, frame_rate, speed):
+    def IVUS_gating_diastole(self):
         """Performs gating of IVUS images"""
 
-        if len(images.shape) == 4:
-            images = images[:, :, :, 0]
+        if len(self.images.shape) == 4:
+            self.images = self.images[:, :, :, 0]
 
-        num_images = images.shape[0]
+        num_images = self.images.shape[0]
         pullback = (
-            speed * (num_images - 1) / frame_rate
+            self.speed * (num_images - 1) / self.frame_rate
         )  # first image is recorded instantly so no time delay
 
         s0 = np.zeros((num_images - 1, 1))
         s1 = np.zeros((num_images - 1, 1))
 
         for i in range(num_images - 1):
-            C = self.normxcorr(images[i, :, :], images[i + 1, :, :])
+            C = self.normxcorr(self.images[i, :, :], self.images[i + 1, :, :])
             s0[i] = 1 - np.max(C)
-            gradx, grady = np.gradient(images[i, :, :])
+            gradx, grady = np.gradient(self.images[i, :, :])
             gradmag = abs(np.sqrt(gradx**2 + grady**2))
             s1[i] = -np.sum(gradmag)
 
@@ -59,7 +62,7 @@ class PreProcessing:
         s = alpha * s0_norm + (1 - alpha) * s1_norm
 
         # determine Fs (sampling frequency)
-        t = np.linspace(0, pullback / speed, num_images)
+        t = np.linspace(0, pullback / self.speed, num_images)
         Fs = num_images / np.max(t)
         NFFT = int(2 ** np.ceil(np.log2(np.abs(len(s)))))
         ss = np.fft.fft(s, NFFT, 0) / len(s)
@@ -178,31 +181,31 @@ class PreProcessing:
         return C
 
 
-    def IVUS_gating_systole(self, frame_rate, speed, tags_dia):
+    def IVUS_gating_systole(self, tags_dia):
         """based on the frames p from IVUS gating, find the systolic frames with the formula 425 - 1.5 * HR"""
         distance_frames = []
         tags_sys = []
         for i in range(len(tags_dia) - 1):
             frame_diff = tags_dia[i + 1] - tags_dia[i]
-            time_diff = frame_diff / frame_rate
+            time_diff = frame_diff / self.frame_rate
             HR = 60 / time_diff
             s_to_systole = float((425 - 1.5 * HR) / 1000)
-            frames = int(s_to_systole * frame_rate)
+            frames = int(s_to_systole * self.frame_rate)
             tags_sys.append(tags_dia[i] + frames)
-            distance = time_diff * speed
+            distance = time_diff * self.speed
             distance_frames.append(distance)
         return tags_sys, distance_frames
 
 
-    def stack_generator(self, images, tags_dia, tags_sys):
+    def stack_generator(self, tags_dia, tags_sys):
         """generate a stack for systolic and diastolic images based on list position"""
         diastole = []
         systole = []
-        for i in range(len(images)):
+        for i in range(len(self.images)):
             if i in tags_dia:
-                diastole.append(images[i])
+                diastole.append(self.images[i])
             if i in tags_sys:
-                systole.append(images[i])
+                systole.append(self.images[i])
         # for i in range(len(diastole)):  # transpose and rotate
         #     diastole[i] = np.flipud(diastole[i])
         # for i in range(len(systole)):  # transpose and rotate
