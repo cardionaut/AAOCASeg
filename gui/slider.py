@@ -1,5 +1,6 @@
 import time
 
+from loguru import logger
 from PyQt5.QtWidgets import (
     QSlider,
     QApplication,
@@ -39,7 +40,7 @@ class Slider(QSlider):
         elif key == Qt.Key_Left:
             self.setValue(self.value() - 1)
         elif key == Qt.Key_Up:
-            if self.gatedFrames:
+            if self.gatedFrames is not None:
                 currentGatedFrame = self.findFrame(self.value())
                 currentGatedFrame = currentGatedFrame + 1
                 if currentGatedFrame > self.maxFrame:
@@ -48,7 +49,7 @@ class Slider(QSlider):
             else:
                 self.setValue(self.value() + 1)
         elif key == Qt.Key_Down:
-            if self.gatedFrames:
+            if self.gatedFrames is not None:
                 currentGatedFrame = self.findFrame(self.value())
                 currentGatedFrame = currentGatedFrame - 1
                 if currentGatedFrame < 0:
@@ -75,9 +76,8 @@ class Slider(QSlider):
         Args:
             currentFrame: int, current displayed frame
         Returns:
-            currentGatedFrame: int, gated frame closeset to current displayed frame
+            currentGatedFrame: int, gated frame closest to current displayed frame
         """
-
         frameDiff = [abs(val - currentFrame) for val in self.gatedFrames]
         currentGatedFrame = [idx for idx in range(len(frameDiff)) if frameDiff[idx] == min(frameDiff)][0]
 

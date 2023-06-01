@@ -15,7 +15,7 @@ class PreProcessing:
         tags_sys, distance_frames = self.IVUS_gating_systole(tags_dia)
         dia, sys = self.stack_generator(tags_dia, tags_sys)
 
-        return dia, sys, distance_frames
+        return tags_dia, tags_sys, distance_frames
 
 
     def DICOM_reader(self):
