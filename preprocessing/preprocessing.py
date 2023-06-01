@@ -1,33 +1,21 @@
 import pydicom as dcm
 import numpy as np
 
+from loguru import logger
+
 
 class PreProcessing:
     def __init__(self, images, frame_rate, speed) -> None:
-        # self.dir_path = config.dir_path
         self.images = images
         self.frame_rate = frame_rate
         self.speed = speed
 
     def __call__(self):
-        # images, frame_rate, speed = self.DICOM_reader()
         tags_dia = self.IVUS_gating_diastole()
         tags_sys, distance_frames = self.IVUS_gating_systole(tags_dia)
         dia, sys = self.stack_generator(tags_dia, tags_sys)
 
         return tags_dia, tags_sys, distance_frames
-
-
-    def DICOM_reader(self):
-        """Reads DICOM file and returns numpy array and relevant metadata"""
-        ds = dcm.dcmread(self.dir_path)
-        images = np.array(ds.pixel_array)
-        frame_rate = int(ds.CineRate)
-        speed = float(ds.IVUSPullbackRate)
-        # StartFrame = int(ds.IVUSPullbackStartFrameNumber)
-        # StopFrame = int(ds.IVUSPullbackStopFrameNumber)
-        return images, frame_rate, speed
-
 
     def IVUS_gating_diastole(self):
         """Performs gating of IVUS images"""
@@ -36,9 +24,7 @@ class PreProcessing:
             self.images = self.images[:, :, :, 0]
 
         num_images = self.images.shape[0]
-        pullback = (
-            self.speed * (num_images - 1) / self.frame_rate
-        )  # first image is recorded instantly so no time delay
+        pullback = self.speed * (num_images - 1) / self.frame_rate  # first image is recorded instantly so no time delay
 
         s0 = np.zeros((num_images - 1, 1))
         s1 = np.zeros((num_images - 1, 1))
@@ -166,19 +152,15 @@ class PreProcessing:
 
         return tags_dia
 
-
     def normxcorr(self, image1, image2):
         C = np.zeros_like(image1)
         image1_mean = np.mean(image1)
         image2_mean = np.mean(image2)
         image1_std = np.std(image1)
         image2_std = np.std(image2)
-        C = np.sum((image1 - image1_mean) * (image2 - image2_mean)) / (
-            image1_std * image2_std
-        )
+        C = np.sum((image1 - image1_mean) * (image2 - image2_mean)) / (image1_std * image2_std)
         C = C / (image1.shape[0] * image1.shape[1])
         return C
-
 
     def IVUS_gating_systole(self, tags_dia):
         """based on the frames p from IVUS gating, find the systolic frames with the formula 425 - 1.5 * HR"""
@@ -195,20 +177,9 @@ class PreProcessing:
             distance_frames.append(distance)
         return tags_sys, distance_frames
 
-
     def stack_generator(self, tags_dia, tags_sys):
         """generate a stack for systolic and diastolic images based on list position"""
-        diastole = []
-        systole = []
-        for i in range(len(self.images)):
-            if i in tags_dia:
-                diastole.append(self.images[i])
-            if i in tags_sys:
-                systole.append(self.images[i])
-        # for i in range(len(diastole)):  # transpose and rotate
-        #     diastole[i] = np.flipud(diastole[i])
-        # for i in range(len(systole)):  # transpose and rotate
-        #     systole[i] = np.flipud(systole[i])
-        diastole = np.array(diastole)
-        systole = np.array(systole)
+        diastole = self.images[tags_dia, :, :]
+        systole = self.images[tags_sys, :, :]
+
         return diastole, systole

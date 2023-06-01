@@ -100,7 +100,7 @@ class Master(QMainWindow):
         self.infoTable.setVerticalHeader(hideHeader1)
         self.infoTable.setHorizontalHeader(hideHeader2)
         self.infoTable.horizontalHeader().setStretchLastSection(True)
-        
+
         dicomButton.clicked.connect(lambda _: readDICOM(self))
         contoursButton.clicked.connect(lambda _: readContours(self))
         segmentButton.clicked.connect(lambda _: segment(self))
@@ -131,9 +131,7 @@ class Master(QMainWindow):
         )
         self.useDiastolicBox = QCheckBox('Diastolic Frames')
         self.useDiastolicBox.stateChanged[int].connect(self.useDiastolic)
-        self.useDiastolicBox.setToolTip(
-            "Check for diastolic frames, uncheck for systolic frames"
-        )
+        self.useDiastolicBox.setToolTip("Check for diastolic frames, uncheck for systolic frames")
 
         self.wid = Display()
         self.c = Communicate()
@@ -224,10 +222,17 @@ class Master(QMainWindow):
 
     def gate(self):
         """Extract end diastolic frames and stores in new variable"""
-
-        preprocessor = PreProcessing(self.images, self.dicom.CineRate, self.ivusPullbackRate)
-        self.gated_frames_dia, self.gated_frames_sys, self.distance_frames = preprocessor()
-        self.gated_frames = self.gated_frames_dia  # diastolic frames by default
+        try:
+            preprocessor = PreProcessing(self.images, self.dicom.CineRate, self.ivusPullbackRate)
+            self.gated_frames_dia, self.gated_frames_sys, self.distance_frames = preprocessor()
+            self.gated_frames = self.gated_frames_dia  # diastolic frames by default
+        except AttributeError:  # self.images not defined because no file was read first
+            warning = QErrorMessage()
+            warning.setWindowModality(Qt.WindowModal)
+            warning.showMessage("Please first select a DICOM file to be read")
+            warning.exec_()
+            return
+        
         if self.gated_frames is not None:
             self.slider.addGatedFrames(self.gated_frames)
             self.useGatedBox.setChecked(True)
