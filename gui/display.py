@@ -160,9 +160,10 @@ class Display(QGraphicsView):
         for frame in range(self.numberOfFrames):
             if self.lumen[0][frame]:
                 lumen = Spline([self.lumen[0][frame], self.lumen[1][frame]], 'r')
-                plaque = Spline([self.plaque[0][frame], self.plaque[1][frame]], 'y')
                 lumenContour[0].append(list(lumen.points[0]))
                 lumenContour[1].append(list(lumen.points[1]))
+            if self.plaque[0][frame]:
+                plaque = Spline([self.plaque[0][frame], self.plaque[1][frame]], 'y')
                 plaqueContour[0].append(list(plaque.points[0]))
                 plaqueContour[1].append(list(plaque.points[1]))
             else:
@@ -293,7 +294,6 @@ class Display(QGraphicsView):
                     elif self.edit_selection == 2:
                         self.lumen[0][self.frame] = [val / scaling_factor for val in downsampled[0][0]]
                         self.lumen[1][self.frame] = [val / scaling_factor for val in downsampled[1][0]]
-
 
                 self.displayImage()
 

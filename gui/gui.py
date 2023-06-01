@@ -23,7 +23,7 @@ from PyQt5.QtGui import QIcon
 from gui.display import Display
 from gui.slider import Slider, Communicate
 from input_output.read_dicom import readDICOM
-from input_output.contours import readContours, writeContours, autoSave, segment, newSpline
+from input_output.contours import readContours, writeContours, segment, newSpline
 from input_output.report import report
 from preprocessing.preprocessing import PreProcessing
 
@@ -43,7 +43,7 @@ class Master(QMainWindow):
         super().__init__()
         self.image = False
         self.contours = False
-        self.segmentation = False
+        self.segmentation = True  # segmentation to do
         self.lumen = ()
         self.plaque = ()
         self.initGUI()
@@ -173,8 +173,8 @@ class Master(QMainWindow):
         # pipe = subprocess.Popen(["rm","-r","some.file"])
         # pipe.communicate() # block until process completes.
         timer = QTimer(self)
-        timer.timeout.connect(lambda _: autoSave(self))
-        timer.start(180000)  # autosaves every 3 minutes
+        timer.timeout.connect(self.autoSave)
+        timer.start(1000)  # autosave interval in milliseconds
 
     def keyPressEvent(self, event):
         key = event.key()
@@ -243,6 +243,13 @@ class Master(QMainWindow):
             warning.setWindowModality(Qt.WindowModal)
             warning.showMessage("Diastolic/Systolic frame extraction was unsuccessful")
             warning.exec_()
+
+    def autoSave(self):
+        """Automatically saves contours to a temporary file every 180 seconds"""
+
+        if self.contours:
+            logger.info("Automatically saving current contours")
+            writeContours("temp")
 
     def changeValue(self, value):
         self.c.updateBW.emit(value)

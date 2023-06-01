@@ -1,4 +1,5 @@
 import numpy as np
+from loguru import logger
 from scipy.interpolate import splprep, splev
 from PyQt5.QtWidgets import QGraphicsEllipseItem, QGraphicsPathItem
 from PyQt5.QtCore import Qt, QPointF
@@ -48,6 +49,7 @@ class Spline(QGraphicsPathItem):
     """Class that describes a spline"""
 
     def __init__(self, points, color):
+        super().__init__()
         self.setKnotPoints(points)
 
         if color == 'y':
@@ -60,17 +62,21 @@ class Spline(QGraphicsPathItem):
     def setKnotPoints(self, knotPoints):
         """KnotPoints is a list of points"""
 
-        p1 = QPointF(knotPoints[0][0], knotPoints[1][0])
-        self.path = QPainterPath(p1)
-        super(Spline, self).__init__(self.path)
+        try:
+            p1 = QPointF(knotPoints[0][0], knotPoints[1][0])
+            self.path = QPainterPath(p1)
+            super(Spline, self).__init__(self.path)
 
-        self.points = self.interpolate(knotPoints)
-        for i in range(0, len(self.points[0])):
-            self.path.lineTo(self.points[0][i], self.points[1][i])
+            self.points = self.interpolate(knotPoints)
+            for i in range(0, len(self.points[0])):
+                self.path.lineTo(self.points[0][i], self.points[1][i])
 
-        self.setPath(self.path)
-        self.path.closeSubpath()
-        self.knotPoints = knotPoints
+            self.setPath(self.path)
+            self.path.closeSubpath()
+            self.knotPoints = knotPoints
+        except IndexError:  # not knotPoints for this frame
+            logger.debug(knotPoints)
+            pass
 
     def interpolate(self, pts):
         """Interpolates the spline points at 500 points along spline"""

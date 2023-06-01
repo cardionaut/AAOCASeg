@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+from loguru import logger
 from PyQt5.QtWidgets import (
     QErrorMessage,
     QFileDialog,
@@ -43,9 +44,9 @@ def readContours(window):
                 warning.exec_()
             else:
                 window.resolution = float(window.resolution[0])
-                window.lumen = window.mapToList(window.lumen)
-                window.plaque = window.mapToList(window.plaque)
-                window.stent = window.mapToList(window.stent)
+                window.lumen = mapToList(window.lumen)
+                window.plaque = mapToList(window.plaque)
+                window.stent = mapToList(window.stent)
                 window.contours = True
                 window.wid.setData(window.lumen, window.plaque, window.stent, window.images)
                 window.hideBox.setChecked(False)
@@ -69,15 +70,15 @@ def writeContours(window, fname=None):
     x, y = [], []
     for i in range(len(window.lumen[0])):
         x.append(window.lumen[0][i])
-        x.append(window.plaque[0][i])
         y.append(window.lumen[1][i])
+    for i in range(len(window.plaque[0])):
+        x.append(window.plaque[0][i])
         y.append(window.plaque[1][i])
 
     if not window.segmentation and not window.contours:
         window.errorMessage()
     else:
         frames = list(range(window.numberOfFrames))
-
         write_xml(
             x,
             y,
@@ -89,14 +90,6 @@ def writeContours(window, fname=None):
         )
         if fname is None:
             window.successMessage("Writing contours")
-
-
-def autoSave(window):
-    """Automatically saves contours to a temporary file every 180 seconds"""
-
-    if window.contours:
-        print("Automatically saving current contours")
-        window.writeContours("temp")
 
 def reset_contours(window):
     window.contours = False
@@ -111,7 +104,7 @@ def segment(window):
 def newSpline(window):
     """Create a message box to choose what spline to create"""
 
-    b3 = QPushButton("lumen")
+    b3 = QPushButton("Lumen")
     b2 = QPushButton("Vessel")
     b1 = QPushButton("Stent")
 
@@ -130,7 +123,7 @@ def newSpline(window):
     window.wid.new(result)
     window.hideBox.setChecked(False)
 
-def maskToContours(window, masks):
+def maskToContours(masks):
     """Convert numpy mask to IVUS contours"""
 
     levels = [1.5, 2.5]
@@ -140,7 +133,7 @@ def maskToContours(window, masks):
 
     return lumen_pred, plaque_pred
 
-def contourArea(window, x, y):
+def contourArea(x, y):
     """Calculate contour/polygon area using Shoelace formula"""
 
     area = 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
@@ -169,7 +162,7 @@ def computeContourMetrics(window, lumen, plaque):
 
     return (lumen_area, plaque_area, plaque_burden)
 
-def mapToList(window, contours):
+def mapToList(contours):
     """Converts map to list"""
 
     x, y = contours
