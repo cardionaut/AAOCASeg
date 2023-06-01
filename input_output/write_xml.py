@@ -106,8 +106,8 @@ def write_xml(x, y, dims, resolution, speed, frames, pname):
     """Write an xml file of contour data
 
     Args:
-        x: list, where alternating entries are lists of lume/plaque x points
-        y: list, where alternating entries are lists of lume/plaque y points
+        x: list, where alternating entries are lists of lumen/plaque x points
+        y: list, where alternating entries are lists of lumen/plaque y points
         dims: list, where entries are image height, width and number of images
         resolution: float, image resolution (mm)
         speed: float, speed of pullback mm/s

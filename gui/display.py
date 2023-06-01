@@ -270,28 +270,32 @@ class Display(QGraphicsView):
             else:
                 self.newSpline.update(point, len(self.drawPoints))
 
-        if len(self.drawPoints) > 1:
+        if len(self.drawPoints) == 2:
             dist = math.sqrt(
                 (point.x() - self.drawPoints[0].getPoint()[0]) ** 2
                 + (point.y() - self.drawPoints[0].getPoint()[1]) ** 2
             )
 
             if dist < 10:
-                self.draw = False
-                self.drawPoints = []
-                downsampled = self.downsample(
-                    ([self.newSpline.points[0].tolist()], [self.newSpline.points[1].tolist()])
-                )
-                scaling_factor = self.display_size / self.imsize[1]
-                if self.edit_selection == 0:
-                    self.stent[0][self.frame] = [val / scaling_factor for val in downsampled[0][0]]
-                    self.stent[1][self.frame] = [val / scaling_factor for val in downsampled[1][0]]
-                elif self.edit_selection == 1:
-                    self.plaque[0][self.frame] = [val / scaling_factor for val in downsampled[0][0]]
-                    self.plaque[1][self.frame] = [val / scaling_factor for val in downsampled[1][0]]
-                elif self.edit_selection == 2:
-                    self.lumen[0][self.frame] = [val / scaling_factor for val in downsampled[0][0]]
-                    self.lumen[1][self.frame] = [val / scaling_factor for val in downsampled[1][0]]
+                if self.newSpline.points is not None:
+                    self.draw = False
+                    self.drawPoints = []
+                    downsampled = self.downsample(
+                        ([self.newSpline.points[0].tolist()], [self.newSpline.points[1].tolist()])
+                    )
+                    scaling_factor = self.display_size / self.imsize[1]
+                    if self.edit_selection == 0:
+                        self.stent[0][self.frame] = [val / scaling_factor for val in downsampled[0][0]]
+                        self.stent[1][self.frame] = [val / scaling_factor for val in downsampled[1][0]]
+                    elif self.edit_selection == 1:
+                        self.plaque[0][self.frame] = [val / scaling_factor for val in downsampled[0][0]]
+                        self.plaque[1][self.frame] = [val / scaling_factor for val in downsampled[1][0]]
+                    elif self.edit_selection == 2:
+                        self.lumen[0][self.frame] = [val / scaling_factor for val in downsampled[0][0]]
+                        self.lumen[1][self.frame] = [val / scaling_factor for val in downsampled[1][0]]
+                else:
+                    self.drawPoints.remove(Point((point.x(), point.y()), 'b'))
+
 
                 self.displayImage()
 
