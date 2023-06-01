@@ -98,6 +98,11 @@ def autoSave(window):
         print("Automatically saving current contours")
         window.writeContours("temp")
 
+def reset_contours(window):
+    window.contours = False
+    window.lumen = None
+    window.plaque = None
+    window.stent = None
 
 def segment(window):
     """Segmentation and phenotyping of IVUS images"""
