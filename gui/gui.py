@@ -68,7 +68,7 @@ class Master(QMainWindow):
 
         dicomButton = QPushButton('Read DICOM')
         contoursButton = QPushButton('Read Contours')
-        gatingButton = QPushButton('Extract Diastolic Frames')
+        gatingButton = QPushButton('Extract Diastolic and Systolic Frames')
         segmentButton = QPushButton('Segment')
         splineButton = QPushButton('Manual Contour')
         writeButton = QPushButton('Write Contours')
@@ -76,7 +76,7 @@ class Master(QMainWindow):
 
         dicomButton.setToolTip("Load images in .dcm format")
         contoursButton.setToolTip("Load saved contours in .xml format")
-        gatingButton.setToolTip("Extract end diastolic images from pullback")
+        gatingButton.setToolTip("Extract diastolic and systolic images from pullback")
         segmentButton.setToolTip("Run deep learning based segmentation of lumen and plaque")
         splineButton.setToolTip("Manually draw new contour for lumen, plaque or stent")
         writeButton.setToolTip("Save contours in .xml file")
@@ -129,7 +129,11 @@ class Master(QMainWindow):
         self.useGatedBox.setToolTip(
             "When this is checked only gated frames will be segmented and only gated frames statistics will be written to the report"
         )
-        self.useGatedBox.setToolTipDuration(200)
+        self.useDiastolicBox = QCheckBox('Diastolic Frames')
+        self.useDiastolicBox.stateChanged[int].connect(self.useDiastolic)
+        self.useDiastolicBox.setToolTip(
+            "Check for diastolic frames, uncheck for systolic frames"
+        )
 
         self.wid = Display()
         self.c = Communicate()
@@ -148,6 +152,7 @@ class Master(QMainWindow):
 
         vbox2.addWidget(self.hideBox)
         vbox2.addWidget(self.useGatedBox)
+        vbox2.addWidget(self.useDiastolicBox)
         vbox2.addWidget(dicomButton)
         vbox2.addWidget(contoursButton)
         vbox2.addWidget(gatingButton)
@@ -222,14 +227,16 @@ class Master(QMainWindow):
 
         preprocessor = PreProcessing(self.images, self.dicom.CineRate, self.ivusPullbackRate)
         self.gated_frames_dia, self.gated_frames_sys, self.distance_frames = preprocessor()
-        if self.gated_frames_dia is not None:
-            self.slider.addGatedFrames(self.gated_frames_dia)
+        self.gated_frames = self.gated_frames_dia  # diastolic frames by default
+        if self.gated_frames is not None:
+            self.slider.addGatedFrames(self.gated_frames)
             self.useGatedBox.setChecked(True)
-            self.successMessage("Diastolic frame (change with up and down arrows) extraction")
+            self.useDiastolicBox.setChecked(True)
+            self.successMessage("Diastolic/Systolic frame (change with up and down arrows) extraction")
         else:
             warning = QErrorMessage()
             warning.setWindowModality(Qt.WindowModal)
-            warning.showMessage("Diastolic frame extraction was unsuccessful")
+            warning.showMessage("Diastolic/Systolic frame extraction was unsuccessful")
             warning.exec_()
 
     def changeValue(self, value):
@@ -243,6 +250,15 @@ class Master(QMainWindow):
 
     def useGated(self, value):
         self.gated = value
+
+    def useDiastolic(self, value):
+        if value:
+            self.gated_frames = self.gated_frames_dia
+        else:
+            self.gated_frames = self.gated_frames_sys
+
+        self.slider.addGatedFrames(self.gated_frames)
+        self.useGatedBox.setChecked(True)
 
     def errorMessage(self):
         """Helper function for errors"""
