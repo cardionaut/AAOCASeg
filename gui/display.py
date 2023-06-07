@@ -1,7 +1,8 @@
 import math
 
 import numpy as np
-from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsPixmapItem
+from loguru import logger
+from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QApplication
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QImage
 
@@ -295,12 +296,16 @@ class Display(QGraphicsView):
                         self.lumen[0][self.frame] = [val / scaling_factor for val in downsampled[0][0]]
                         self.lumen[1][self.frame] = [val / scaling_factor for val in downsampled[1][0]]
 
+                self.win.setCursor(Qt.ArrowCursor)
                 self.displayImage()
 
     def run(self):
         self.displayImage()
 
-    def new(self, edit_selection):
+    def new(self, window, edit_selection):
+        self.win = window
+        self.win.setCursor(Qt.CrossCursor)
+
         self.draw = True
         self.edit_selection = edit_selection
 
@@ -310,9 +315,11 @@ class Display(QGraphicsView):
         elif self.edit_selection == 1:
             self.plaque[0][self.frame] = []
             self.plaque[1][self.frame] = []
-        else:
+        elif self.edit_selection == 2:
             self.lumen[0][self.frame] = []
             self.lumen[1][self.frame] = []
+        else:
+            return
 
         self.displayImage()
 

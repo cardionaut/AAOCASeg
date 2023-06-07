@@ -203,10 +203,25 @@ class Master(QMainWindow):
             self.slider.next_gated_frame()
         elif key == Qt.Key_S:
             self.slider.last_gated_frame()
-        elif key == Qt.Key_A:
-            self.slider.setValue(self.slider.value() + 1)
         elif key == Qt.Key_D:
+            self.slider.setValue(self.slider.value() + 1)
+        elif key == Qt.Key_A:
             self.slider.setValue(self.slider.value() - 1)
+        elif key == Qt.Key_E:
+            if self.image:
+                self.wid.new(self, 2)  # start new manual Lumen contour
+                self.hideBox.setChecked(False)
+                self.contours = True
+        elif key == Qt.Key_R:
+            if self.image:
+                self.wid.new(self, 1)  # start new manual Vessel contour
+                self.hideBox.setChecked(False)
+                self.contours = True
+        elif key == Qt.Key_T:
+            if self.image:
+                self.wid.new(self, 0)  # start new manual Stent contour
+                self.hideBox.setChecked(False)
+                self.contours = True
 
     def play(self):
         "Plays all frames until end of pullback starting from currently selected frame" ""

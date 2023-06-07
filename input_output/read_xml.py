@@ -61,7 +61,6 @@ def read(path, frames=[]):
 
             for frame in child.iter('Fm'):
                 frameNo = int(frame.find('Num').text)
-                print('Reading frame no {}'.format(frameNo))
                 # iterate through the frame and identify the contour
                 lumen_subpoints = []
                 vessel_subpoints = []
@@ -104,8 +103,8 @@ def read(path, frames=[]):
     # return unique frames as we have entry for each inner and outer contour
     framelist = list(sorted(set(map(int, framelist))))
 
-    print((xdim, ydim, zdim))
-    print((xres, yres))
+    # print((xdim, ydim, zdim))
+    # print((xres, yres))
 
     #return (Lx, Ly), (Vx, Vy), (Sx, Sy), [xres, yres], framelist
     return (Lx, Ly), (Vx, Vy), (Sx, Sy), [xres, yres], [xdim, ydim, zdim]

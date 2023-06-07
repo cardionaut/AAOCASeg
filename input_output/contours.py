@@ -26,46 +26,56 @@ def readContours(window):
         warning.setWindowModality(Qt.WindowModal)
         warning.showMessage('Reading of contours failed. Images must be loaded prior to loading contours')
         warning.exec_()
-    else:
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getOpenFileName(
-            window, "QFileDialog.getOpenFileName()", "", "XML file (*.xml)", options=options
-        )
-        if fileName:
-            window.lumen, window.plaque, window.stent, window.resolution, frames = read(fileName)
+        return
 
-            if len(window.lumen[0]) != window.dicom.NumberOfFrames:
-                warning = QErrorMessage()
-                warning.setWindowModality(Qt.WindowModal)
-                warning.showMessage(
-                    'Reading of contours failed. File must contain the same number of frames as loaded dicom'
-                )
-                warning.exec_()
-            else:
-                window.resolution = float(window.resolution[0])
-                window.lumen = mapToList(window.lumen)
-                window.plaque = mapToList(window.plaque)
-                window.stent = mapToList(window.stent)
-                window.contours = True
-                window.wid.setData(window.lumen, window.plaque, window.stent, window.images)
-                window.hideBox.setChecked(False)
+    options = QFileDialog.Options()
+    options |= QFileDialog.DontUseNativeDialog
+    fileName, _ = QFileDialog.getOpenFileName(
+        window, "QFileDialog.getOpenFileName()", "", "XML file (*.xml)", options=options
+    )
+    if fileName:
+        window.lumen, window.plaque, window.stent, window.resolution, frames = read(fileName)
 
-                gatedFrames = [
-                    frame for frame in range(len(window.lumen[0])) if window.lumen[0][frame] or window.plaque[0][frame]
-                ]
-                window.gatedFrames = gatedFrames
-                window.useGatedBox.setChecked(True)
-                window.slider.addGatedFrames(window.gatedFrames)
+        if len(window.lumen[0]) != window.dicom.NumberOfFrames:
+            warning = QErrorMessage()
+            warning.setWindowModality(Qt.WindowModal)
+            warning.showMessage(
+                'Reading of contours failed. File must contain the same number of frames as loaded dicom'
+            )
+            warning.exec_()
+        else:
+            window.resolution = float(window.resolution[0])
+            window.lumen = mapToList(window.lumen)
+            window.plaque = mapToList(window.plaque)
+            window.stent = mapToList(window.stent)
+            window.contours = True
+            window.wid.setData(window.lumen, window.plaque, window.stent, window.images)
+            window.hideBox.setChecked(False)
+
+            gatedFrames = [
+                frame for frame in range(len(window.lumen[0])) if window.lumen[0][frame] or window.plaque[0][frame]
+            ]
+            window.gatedFrames = gatedFrames
+            window.useGatedBox.setChecked(True)
+            window.slider.addGatedFrames(window.gatedFrames)
 
 
 def writeContours(window):
     """Writes contours to an xml file compatible with Echoplaque"""
 
+    if not window.image:
+        warning = QErrorMessage()
+        warning.setWindowModality(Qt.WindowModal)
+        warning.showMessage('Cannot write contours before reading DICOM file')
+        warning.exec_()
+        return
+
     window.lumen, window.plaque = window.wid.getData()
 
     # reformat data for compatibility with write_xml function
     x, y = [], []
+    logger.debug(len(window.lumen[0]))
+    logger.debug(len(window.plaque[0]))
     for i in range(len(window.lumen[0])):
         x.append(window.lumen[0][i])
         y.append(window.lumen[1][i])
@@ -87,28 +97,36 @@ def writeContours(window):
             window.file_name,
         )
 
+
 def reset_contours(window):
     window.contours = False
     window.lumen = None
     window.plaque = None
     window.stent = None
 
+
 def segment(window):
     """Segmentation and phenotyping of IVUS images"""
     pass
 
+
 def newSpline(window):
     """Create a message box to choose what spline to create"""
 
-    b3 = QPushButton("Lumen")
-    b2 = QPushButton("Vessel")
+    if not window.image:
+        warning = QErrorMessage()
+        warning.setWindowModality(Qt.WindowModal)
+        warning.showMessage('Cannot create manual contour before reading DICOM file')
+        warning.exec_()
+        return
+
     b1 = QPushButton("Stent")
+    b2 = QPushButton("Vessel")
+    b3 = QPushButton("Lumen")
 
     d = QMessageBox()
     d.setText("Select which contour to draw")
-    d.setInformativeText(
-        "Contour must be closed before proceeding by clicking on initial point"
-    )
+    d.setInformativeText("Contour must be closed before proceeding by clicking on initial point")
     d.setWindowModality(Qt.WindowModal)
     d.addButton(b1, 0)
     d.addButton(b2, 1)
@@ -116,9 +134,10 @@ def newSpline(window):
 
     result = d.exec_()
 
-    window.wid.new(result)
+    window.wid.new(window, result)
     window.hideBox.setChecked(False)
     window.contours = True
+
 
 def maskToContours(masks):
     """Convert numpy mask to IVUS contours"""
@@ -130,12 +149,14 @@ def maskToContours(masks):
 
     return lumen_pred, plaque_pred
 
+
 def contourArea(x, y):
     """Calculate contour/polygon area using Shoelace formula"""
 
     area = 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
 
     return area
+
 
 def computeContourMetrics(window, lumen, plaque):
     """Computes lumen area, plaque area and plaque burden from contours"""
@@ -146,18 +167,12 @@ def computeContourMetrics(window, lumen, plaque):
     plaque_burden = np.zeros_like(lumen_area)
     for i in range(numberOfFrames):
         if lumen[0][i]:
-            lumen_area[i] = (
-                window.contourArea(lumen[0][i], lumen[1][i]) * window.resolution**2
-            )
-            plaque_area[i] = (
-                window.contourArea(plaque[0][i], plaque[1][i]) * window.resolution**2
-                - lumen_area[i]
-            )
-            plaque_burden[i] = (
-                plaque_area[i] / (lumen_area[i] + plaque_area[i])
-            ) * 100
+            lumen_area[i] = window.contourArea(lumen[0][i], lumen[1][i]) * window.resolution**2
+            plaque_area[i] = window.contourArea(plaque[0][i], plaque[1][i]) * window.resolution**2 - lumen_area[i]
+            plaque_burden[i] = (plaque_area[i] / (lumen_area[i] + plaque_area[i])) * 100
 
     return (lumen_area, plaque_area, plaque_burden)
+
 
 def mapToList(contours):
     """Converts map to list"""
