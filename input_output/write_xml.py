@@ -6,7 +6,10 @@ import datetime
 import numpy as np
 import PIL.Image as im
 import matplotlib.path as mplPath
+from loguru import logger
 from skimage import measure
+from pathlib import Path
+
 
 # read images
 def mask_image(mask, catheter):
@@ -16,7 +19,7 @@ def mask_image(mask, catheter):
     # set catheter values equal to lumen values
     if catheter == 1:
         mask[mask == 1] = 2
-        mask[mask < 2] = mask.max() 
+        mask[mask < 2] = mask.max()
     else:
         mask[mask < 1] = mask.max()
 
@@ -50,27 +53,30 @@ def keep_largest_contour(contours, image_shape):
     for contour in contours:
         if keep_valid_contour(contour, image_shape):
             if len(contour[0]) > max_length:
-                keep_contour = [list(contour[1, :]),  list(contour[0, :])]
-                max_length = len(contour[0])            
+                keep_contour = [list(contour[1, :]), list(contour[0, :])]
+                max_length = len(contour[0])
 
     return keep_contour
+
 
 def keep_valid_contour(contour, image_shape):
     # this function check that the contour is valid if the image centroid is contained within the mask region
     bbPath = mplPath.Path(np.transpose(contour))
-    centroid = [image_shape[0]//2, image_shape[1]//2]
+    centroid = [image_shape[0] // 2, image_shape[1] // 2]
     return bbPath.contains_point(centroid)
-	
+
+
 def keep_central_contour(contours, image_shape):
     # deprecated, this function returns the contour with its centroid closest to the image centroid
     centroids = np.zeros((len(contours), 2))
     for j, contour in enumerate(contours):
         centroids[j, :] = [np.mean(contour[0, :]), np.mean(contour[1, :])]
     # find distance from image centroid to all centroids
-    dist = np.sqrt((centroids[:, 0] - image_shape[0]//2)**2 + (centroids[:, 1] - image_shape[1]//2)**2)
+    dist = np.sqrt((centroids[:, 0] - image_shape[0] // 2) ** 2 + (centroids[:, 1] - image_shape[1] // 2) ** 2)
     keep_contour = contours[np.argmin(dist)]
     return keep_contour
-	
+
+
 def get_contours(preds, levels, image_shape):
     """Extracts contours from masked images. Returns x and y coodinates"""
     # get contours for each image
@@ -98,11 +104,12 @@ def get_contours(preds, levels, image_shape):
         lumen_pred[0].append(x[-2])
         lumen_pred[1].append(y[-2])
         plaque_pred[0].append(x[-1])
-        plaque_pred[1].append(y[-1])        
+        plaque_pred[1].append(y[-1])
 
     return x, y, lumen_pred, plaque_pred
 
-def write_xml(x, y, dims, resolution, speed, frames, pname):
+
+def write_xml(x, y, dims, resolution, speed, frames, out_path):
     """Write an xml file of contour data
 
     Args:
@@ -138,10 +145,10 @@ def write_xml(x, y, dims, resolution, speed, frames, pname):
     timezone.text = 'GMT-300 min'
     demographics = et.SubElement(root, 'Demographics')
     patientname = et.SubElement(demographics, 'PatientName')
-    patientname.text = pname
+    patientname.text = out_path
     patientid = et.SubElement(demographics, 'PatientID')
-    patientid.text = pname
-  
+    patientid.text = out_path
+
     imagestate = et.SubElement(root, 'ImageState')
     xdim = et.SubElement(imagestate, 'Xdim')
     xdim.text = str(dims[1])
@@ -152,10 +159,10 @@ def write_xml(x, y, dims, resolution, speed, frames, pname):
     firstframeloaded = et.SubElement(imagestate, 'FirstFrameLoaded')
     firstframeloaded.text = str(0)
     lastframeloaded = et.SubElement(imagestate, 'LastFrameLoaded')
-    lastframeloaded.text = str(num_frames-1)
+    lastframeloaded.text = str(num_frames - 1)
     stride = et.SubElement(imagestate, 'Stride')
     stride.text = str(1)
- 
+
     imagecalibration = et.SubElement(root, 'ImageCalibration')
     xcalibration = et.SubElement(imagecalibration, 'XCalibration')
     xcalibration.text = str(resolution)
@@ -165,7 +172,7 @@ def write_xml(x, y, dims, resolution, speed, frames, pname):
     acqrateinfps.text = str(133.0)
     pullbackspeed = et.SubElement(imagecalibration, 'PullbackSpeed')
     pullbackspeed.text = str(speed)
-  
+
     brightnesssetting = et.SubElement(root, 'BrightnessSetting')
     brightnesssetting.text = str(50)
     contrastsetting = et.SubElement(root, 'ContrastSetting')
@@ -176,7 +183,7 @@ def write_xml(x, y, dims, resolution, speed, frames, pname):
     steppinginterval.text = str(1)
     volumehasbeencomputed = et.SubElement(root, 'VolumeHasBeenComputed')
     volumehasbeencomputed.text = 'FALSE'
-  
+
     framestate = et.SubElement(root, 'FrameState')
     imagerelativepoints = et.SubElement(framestate, 'ImageRelativePoints')
     imagerelativepoints.text = 'TRUE'
@@ -188,14 +195,14 @@ def write_xml(x, y, dims, resolution, speed, frames, pname):
         fm = et.SubElement(framestate, 'Fm')
         num = et.SubElement(fm, 'Num')
         num.text = str(i)
-        #num.text = file.split('pred_image')[1].split('.png')[0]
- 
+        # num.text = file.split('pred_image')[1].split('.png')[0]
+
         if i in frames:
-            frame_idx=[k for k in range(len(frames)) if i==frames[k]][0]
+            frame_idx = [k for k in range(len(frames)) if i == frames[k]][0]
             for j in range(2):
                 ctr = et.SubElement(fm, 'Ctr')
                 npts = et.SubElement(ctr, 'Npts')
-                npts.text = str(len(x[frame_idx*2+j]))
+                npts.text = str(len(x[frame_idx * 2 + j]))
                 type = et.SubElement(ctr, 'Type')
                 if j == 0:
                     type.text = 'L'
@@ -204,18 +211,18 @@ def write_xml(x, y, dims, resolution, speed, frames, pname):
                 handdrawn = et.SubElement(ctr, 'HandDrawn')
                 handdrawn.text = 'T'
                 # iterative over the points in each contour
-                for k in range(len(x[frame_idx*2+j])):
+                for k in range(len(x[frame_idx * 2 + j])):
                     p = et.SubElement(ctr, 'p')
-                    p.text = str(int(x[frame_idx*2+j][k])) + ',' + str(int(y[frame_idx*2+j][k]))
-                #print(frame_idx, len(x[frame_idx*2+j]))
- 
+                    p.text = str(int(x[frame_idx * 2 + j][k])) + ',' + str(int(y[frame_idx * 2 + j][k]))
+                # print(frame_idx, len(x[frame_idx*2+j]))
+
     tree = et.ElementTree(root)
-    tree.write(pname+'_contours.xml')
+    tree.write(os.path.splitext(out_path)[0] + '_contours.xml')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate xml file from labelmaps that can be read by Echoplaque')
-    parser.add_argument('--dir', type=str, help="Enter the directory containing the labels")  
+    parser.add_argument('--dir', type=str, help="Enter the directory containing the labels")
     parser.add_argument('--res', default=0.02, type=float, help="Enter the image resolution")
     parser.add_argument('--frames', type=int, help="Enter the total number of frames in the pullback")
     parser.add_argument('--gated', default='', type=str, help="Enter the path to the file with the gated frames")
@@ -236,8 +243,8 @@ if __name__ == '__main__':
     # read prediction images
     pred_files = os.listdir(pred_dir)
     pred_files = [pred for pred in pred_files if '.png' in pred]
-    pred_files.sort(key=lambda var:[int(x) if x.isdigit() else x for x in re.findall(r'[^0-9]|[0-9]+', var)])
-   
+    pred_files.sort(key=lambda var: [int(x) if x.isdigit() else x for x in re.findall(r'[^0-9]|[0-9]+', var)])
+
     frames = [int(file.split('pred_image')[1].split('.png')[0]) for file in pred_files]
     # read gated frames
     if gated != '':
@@ -247,19 +254,18 @@ if __name__ == '__main__':
         data = [int(val) for val in data if val]
     f.close()
     frames = data
- 
+
     # open first image to determine image size
-    catheter=0
+    catheter = 0
     if catheter == 1:
         levels = [2.5, 3.5]
     else:
         levels = [1.5, 2.5]
     image_shape = im.open(os.path.join(pred_dir, pred_files[0])).size
-    preds = np.zeros((len(pred_files), image_shape[0],image_shape[1]), dtype=np.uint8)
+    preds = np.zeros((len(pred_files), image_shape[0], image_shape[1]), dtype=np.uint8)
     for i, pred_file in enumerate(pred_files):
         preds[i, :, :] = np.asarray(im.open(os.path.join(pred_dir, pred_file)))
     preds = mask_image(preds, catheter)
 
     x, y, lumen_pred, plaque_pred = get_contours(preds, levels, image_shape)
     write_xml(x, y, preds.shape, resolution, speed, frames, pname)
-

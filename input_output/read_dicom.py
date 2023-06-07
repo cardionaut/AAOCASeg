@@ -31,6 +31,7 @@ def readDICOM(window):
         try:
             window.dicom = dcm.read_file(fileName, force=True)
             window.images = window.dicom.pixel_array
+            window.file_name = fileName
         except:
             error = QMessageBox()
             error.setIcon(QMessageBox.Critical)

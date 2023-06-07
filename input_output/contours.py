@@ -62,8 +62,6 @@ def readContours(window):
 def writeContours(window, fname=None):
     """Writes contours to an xml file compatible with Echoplaque"""
 
-    patientName = window.infoTable.item(0, 1).text()
-    saveName = patientName if fname is None else fname
     window.lumen, window.plaque = window.wid.getData()
 
     # reformat data for compatibility with write_xml function
@@ -86,7 +84,7 @@ def writeContours(window, fname=None):
             window.resolution,
             window.ivusPullbackRate,
             frames,
-            saveName,
+            window.file_name,
         )
         if fname is None:
             window.successMessage("Writing contours")
