@@ -199,6 +199,14 @@ class Master(QMainWindow):
             time.sleep(0.1)
             self.slider.setValue(currentFrame)
             QApplication.processEvents()
+        elif key == Qt.Key_W:
+            self.slider.next_gated_frame()
+        elif key == Qt.Key_S:
+            self.slider.last_gated_frame()
+        elif key == Qt.Key_A:
+            self.slider.setValue(self.slider.value() + 1)
+        elif key == Qt.Key_D:
+            self.slider.setValue(self.slider.value() - 1)
 
     def play(self):
         "Plays all frames until end of pullback starting from currently selected frame" ""

@@ -35,28 +35,14 @@ class Slider(QSlider):
         """Key events."""
 
         key = event.key()
-        if key == Qt.Key_Right:
+        if key == Qt.Key_Right or key == Qt.Key_D:
             self.setValue(self.value() + 1)
-        elif key == Qt.Key_Left:
+        elif key == Qt.Key_Left or key == Qt.Key_A:
             self.setValue(self.value() - 1)
-        elif key == Qt.Key_Up:
-            if self.gatedFrames is not None:
-                currentGatedFrame = self.findFrame(self.value())
-                currentGatedFrame = currentGatedFrame + 1
-                if currentGatedFrame > self.maxFrame:
-                    currentGatedFrame = self.maxFrame
-                self.setValue(self.gatedFrames[currentGatedFrame])
-            else:
-                self.setValue(self.value() + 1)
-        elif key == Qt.Key_Down:
-            if self.gatedFrames is not None:
-                currentGatedFrame = self.findFrame(self.value())
-                currentGatedFrame = currentGatedFrame - 1
-                if currentGatedFrame < 0:
-                    currentGatedFrame = 0
-                self.setValue(self.gatedFrames[currentGatedFrame])
-            else:
-                self.setValue(self.value() - 1)
+        elif key == Qt.Key_Up or key == Qt.Key_W:
+            self.next_gated_frame()
+        elif key == Qt.Key_Down or key == Qt.Key_S:
+            self.last_gated_frame()
         elif key == Qt.Key_J:
             self.setValue(self.value() - 1)
             QApplication.processEvents()
@@ -69,6 +55,26 @@ class Slider(QSlider):
             time.sleep(0.1)
             self.setValue(self.value() - 1)
             QApplication.processEvents()
+
+    def next_gated_frame(self):
+        if self.gatedFrames:
+            currentGatedFrame = self.findFrame(self.value())
+            currentGatedFrame = currentGatedFrame + 1
+            if currentGatedFrame > self.maxFrame:
+                currentGatedFrame = self.maxFrame
+            self.setValue(self.gatedFrames[currentGatedFrame])
+        else:
+            self.setValue(self.value() + 1)
+
+    def last_gated_frame(self):
+        if self.gatedFrames:
+            currentGatedFrame = self.findFrame(self.value())
+            currentGatedFrame = currentGatedFrame - 1
+            if currentGatedFrame < 0:
+                currentGatedFrame = 0
+            self.setValue(self.gatedFrames[currentGatedFrame])
+        else:
+            self.setValue(self.value() - 1)
 
     def findFrame(self, currentFrame):
         """Find the closest gated frame.
