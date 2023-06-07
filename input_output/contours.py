@@ -59,7 +59,7 @@ def readContours(window):
                 window.slider.addGatedFrames(window.gatedFrames)
 
 
-def writeContours(window, fname=None):
+def writeContours(window):
     """Writes contours to an xml file compatible with Echoplaque"""
 
     window.lumen, window.plaque = window.wid.getData()
@@ -86,8 +86,6 @@ def writeContours(window, fname=None):
             frames,
             window.file_name,
         )
-        if fname is None:
-            window.successMessage("Writing contours")
 
 def reset_contours(window):
     window.contours = False
@@ -120,6 +118,7 @@ def newSpline(window):
 
     window.wid.new(result)
     window.hideBox.setChecked(False)
+    window.contours = True
 
 def maskToContours(masks):
     """Convert numpy mask to IVUS contours"""

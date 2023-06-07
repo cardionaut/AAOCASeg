@@ -140,7 +140,7 @@ class Master(QMainWindow):
 
         self.text = QLabel()
         self.text.setAlignment(Qt.AlignCenter)
-        self.text.setText("Frame {}".format(self.slider.value()))
+        self.text.setText("Frame {}".format(self.slider.value() + 1))
 
         vbox1.addWidget(self.wid)
         vbox1hbox1.addWidget(self.playButton)
@@ -174,7 +174,7 @@ class Master(QMainWindow):
         # pipe.communicate() # block until process completes.
         timer = QTimer(self)
         timer.timeout.connect(self.autoSave)
-        timer.start(1000)  # autosave interval in milliseconds
+        timer.start(1000000)  # autosave interval in milliseconds
 
     def keyPressEvent(self, event):
         key = event.key()
@@ -216,7 +216,7 @@ class Master(QMainWindow):
                 self.slider.setValue(frame)
                 QApplication.processEvents()
                 time.sleep(0.05)
-                self.text.setText("Frame {}".format(frame))
+                self.text.setText("Frame {}".format(frame + 1))
 
         self.playButton.setIcon(self.playIcon)
 
@@ -249,12 +249,12 @@ class Master(QMainWindow):
 
         if self.contours:
             logger.info("Automatically saving current contours")
-            writeContours("temp")
+            writeContours(self)
 
     def changeValue(self, value):
         self.c.updateBW.emit(value)
         self.wid.run()
-        self.text.setText("Frame {}".format(value))
+        self.text.setText("Frame {}".format(value + 1))
 
     def changeState(self, value):
         self.c.updateBool.emit(value)
