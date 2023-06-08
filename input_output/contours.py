@@ -36,28 +36,28 @@ def readContours(window):
     if fileName:
         window.lumen, window.plaque, window.stent, window.resolution, frames = read(fileName)
 
-        if len(window.lumen[0]) != window.dicom.NumberOfFrames:
-            warning = QErrorMessage()
-            warning.setWindowModality(Qt.WindowModal)
-            warning.showMessage(
-                'Reading of contours failed. File must contain the same number of frames as loaded dicom'
-            )
-            warning.exec_()
-        else:
-            window.resolution = float(window.resolution[0])
-            window.lumen = mapToList(window.lumen)
-            window.plaque = mapToList(window.plaque)
-            window.stent = mapToList(window.stent)
-            window.contours = True
-            window.wid.setData(window.lumen, window.plaque, window.stent, window.images)
-            window.hideBox.setChecked(False)
+        # if len(window.lumen[0]) != window.dicom.NumberOfFrames:
+        #     warning = QErrorMessage()
+        #     warning.setWindowModality(Qt.WindowModal)
+        #     warning.showMessage(
+        #         'Reading of contours failed. File must contain the same number of frames as loaded dicom'
+        #     )
+        #     warning.exec_()
+        # else:
+        window.resolution = float(window.resolution[0])
+        window.lumen = mapToList(window.lumen)
+        window.plaque = mapToList(window.plaque)
+        window.stent = mapToList(window.stent)
+        window.contours = True
+        window.wid.setData(window.lumen, window.plaque, window.stent, window.images)
+        window.hideBox.setChecked(False)
 
-            gatedFrames = [
-                frame for frame in range(len(window.lumen[0])) if window.lumen[0][frame] or window.plaque[0][frame]
-            ]
-            window.gatedFrames = gatedFrames
-            window.useGatedBox.setChecked(True)
-            window.slider.addGatedFrames(window.gatedFrames)
+        gatedFrames = [
+            frame for frame in range(len(window.lumen[0])) if window.lumen[0][frame] or window.plaque[0][frame]
+        ]
+        window.gatedFrames = gatedFrames
+        window.useGatedBox.setChecked(True)
+        window.slider.addGatedFrames(window.gatedFrames)
 
 
 def writeContours(window):
@@ -74,28 +74,32 @@ def writeContours(window):
 
     # reformat data for compatibility with write_xml function
     x, y = [], []
-    logger.debug(len(window.lumen[0]))
-    logger.debug(len(window.plaque[0]))
     for i in range(len(window.lumen[0])):
+        if i < len(window.plaque[0]):
+            new_x_plaque = window.plaque[0][i]
+            new_y_plaque = window.plaque[1][i]
+        else:
+            new_x_plaque = []
+            new_y_plaque = []
+
         x.append(window.lumen[0][i])
+        x.append(new_x_plaque)
         y.append(window.lumen[1][i])
-    for i in range(len(window.plaque[0])):
-        x.append(window.plaque[0][i])
-        y.append(window.plaque[1][i])
+        y.append(new_y_plaque)
 
     if not window.segmentation and not window.contours:
         window.errorMessage()
-    else:
-        frames = list(range(window.numberOfFrames))
-        write_xml(
-            x,
-            y,
-            window.images.shape,
-            window.resolution,
-            window.ivusPullbackRate,
-            frames,
-            window.file_name,
-        )
+    
+    frames = list(range(window.numberOfFrames))
+    write_xml(
+        x,
+        y,
+        window.images.shape,
+        window.resolution,
+        window.ivusPullbackRate,
+        frames,
+        window.file_name,
+    )
 
 
 def reset_contours(window):

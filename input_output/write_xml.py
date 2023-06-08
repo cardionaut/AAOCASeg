@@ -200,21 +200,26 @@ def write_xml(x, y, dims, resolution, speed, frames, out_path):
         if i in frames:
             frame_idx = [k for k in range(len(frames)) if i == frames[k]][0]
             for j in range(2):
-                ctr = et.SubElement(fm, 'Ctr')
-                npts = et.SubElement(ctr, 'Npts')
-                npts.text = str(len(x[frame_idx * 2 + j]))
-                type = et.SubElement(ctr, 'Type')
-                if j == 0:
-                    type.text = 'L'
-                elif j == 1:
-                    type.text = 'V'
-                handdrawn = et.SubElement(ctr, 'HandDrawn')
-                handdrawn.text = 'T'
-                # iterative over the points in each contour
-                for k in range(len(x[frame_idx * 2 + j])):
-                    p = et.SubElement(ctr, 'p')
-                    p.text = str(int(x[frame_idx * 2 + j][k])) + ',' + str(int(y[frame_idx * 2 + j][k]))
-                # print(frame_idx, len(x[frame_idx*2+j]))
+                try:
+                    ctr = et.SubElement(fm, 'Ctr')
+                    npts = et.SubElement(ctr, 'Npts')
+                    npts.text = str(len(x[frame_idx * 2 + j]))
+                    type = et.SubElement(ctr, 'Type')
+                    if j == 0:
+                        type.text = 'L'
+                    elif j == 1:
+                        type.text = 'V'
+                    handdrawn = et.SubElement(ctr, 'HandDrawn')
+                    handdrawn.text = 'T'
+                    # iterative over the points in each contour
+                    for k in range(len(x[frame_idx * 2 + j])):
+                        p = et.SubElement(ctr, 'p')
+                        p.text = str(int(x[frame_idx * 2 + j][k])) + ',' + str(int(y[frame_idx * 2 + j][k]))
+                    # print(frame_idx, len(x[frame_idx*2+j]))
+                except IndexError:
+                    logger.debug(len(x))
+                    logger.debug(frame_idx * 2 + j)
+                    pass
 
     tree = et.ElementTree(root)
     tree.write(os.path.splitext(out_path)[0] + '_contours.xml')

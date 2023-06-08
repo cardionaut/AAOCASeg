@@ -174,7 +174,7 @@ class Master(QMainWindow):
         # pipe.communicate() # block until process completes.
         timer = QTimer(self)
         timer.timeout.connect(self.autoSave)
-        timer.start(1000000)  # autosave interval in milliseconds
+        timer.start(10000)  # autosave interval in milliseconds
 
     def keyPressEvent(self, event):
         key = event.key()
@@ -271,7 +271,7 @@ class Master(QMainWindow):
         """Automatically saves contours to a temporary file every 180 seconds"""
 
         if self.contours:
-            logger.info("Automatically saving current contours")
+            # logger.info("Automatically saving current contours")
             writeContours(self)
 
     def changeValue(self, value):

@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as ET
+from loguru import logger
 
 def splitxy(points):
     """Splits comma separated points into separate x and y lists"""
@@ -86,7 +87,6 @@ def read(path, frames=[]):
                                     vessel_subpoints.append(child.text)
                                 elif contour == 'S':
                                     stent_subpoints.append(child.text)
-
                     lumen_points.append(lumen_subpoints)
                     vessel_points.append(vessel_subpoints)
                     stent_points.append(stent_subpoints)
