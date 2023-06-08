@@ -17,10 +17,7 @@ def report(window):
     phenotype = [0] * window.numberOfFrames
     vessel_area = lumen_area + plaque_area
 
-    if window.useGatedBox.isChecked():
-        frames = window.gated_frames
-    else:
-        frames = list(range(window.numberOfFrames))
+    frames = [frame for frame in range(window.numberOfFrames) if window.lumen[0][frame] and window.plaque[0][frame]]
 
     f = open(os.path.splitext(window.file_name)[0] + "_report.txt", "w")
     f.write(
