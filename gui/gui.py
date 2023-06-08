@@ -212,12 +212,12 @@ class Master(QMainWindow):
                 self.wid.new(self, 2)  # start new manual Lumen contour
                 self.hideBox.setChecked(False)
                 self.contours = True
-        elif key == Qt.Key_R:
+        elif key == Qt.Key_F:
             if self.image:
                 self.wid.new(self, 1)  # start new manual Vessel contour
                 self.hideBox.setChecked(False)
                 self.contours = True
-        elif key == Qt.Key_T:
+        elif key == Qt.Key_C:
             if self.image:
                 self.wid.new(self, 0)  # start new manual Stent contour
                 self.hideBox.setChecked(False)
