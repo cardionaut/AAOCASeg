@@ -1,43 +1,47 @@
+import os
+
 import numpy as np
 
+from input_output.contours import computeContourMetrics
 
-def report(self):
+
+def report(window):
     """Writes a report file containing lumen area, plaque, area, vessel area, plaque burden, phenotype"""
 
-    if self.segmentation and not self.contours:
-        self.errorMessage()
+    if window.segmentation and not window.contours:
+        window.errorMessage()
+        return
+
+    window.lumen, window.plaque = window.wid.getData()
+    lumen_area, plaque_area, plaque_burden = computeContourMetrics(window, window.lumen, window.plaque)
+    phenotype = [0] * window.numberOfFrames
+    vessel_area = lumen_area + plaque_area
+
+    if window.useGatedBox.isChecked():
+        frames = window.gated_frames
     else:
-        self.lumen, self.plaque = self.wid.getData()
-        lumen_area, plaque_area, plaque_burden = self.computeContourMetrics(self.lumen, self.plaque)
-        phenotype = [0] * self.numberOfFrames
-        patientName = self.infoTable.item(0, 1).text()
-        vessel_area = lumen_area + plaque_area
+        frames = list(range(window.numberOfFrames))
 
-        if self.useGatedBox.isChecked():
-            frames = self.gatedFrames
-        else:
-            frames = list(range(self.numberOfFrames))
+    f = open(os.path.splitext(window.file_name)[0] + "_report.txt", "w")
+    f.write(
+        "Frame\tPosition (mm)\tLumen area (mm\N{SUPERSCRIPT TWO})\tPlaque area (mm\N{SUPERSCRIPT TWO})\tVessel area (mm\N{SUPERSCRIPT TWO})\tPlaque burden (%)\tphenotype\n"
+    )
 
-        f = open(patientName + "_report.txt", "w")
+    for _, frame in enumerate(frames):
         f.write(
-            "Frame\tPosition (mm)\tLumen area (mm\N{SUPERSCRIPT TWO})\tPlaque area (mm\N{SUPERSCRIPT TWO})\tVessel area (mm\N{SUPERSCRIPT TWO})\tPlaque burden (%)\tphenotype\n"
-        )
-
-        for _, frame in enumerate(frames):
-            f.write(
-                "{}\t{:.2f}\t{:.2f}\t{:.2f}\t{:.2f}\t{:.2f}\t{}\n".format(
-                    frame,
-                    self.pullbackLength[frame],
-                    lumen_area[frame],
-                    plaque_area[frame],
-                    vessel_area[frame],
-                    plaque_burden[frame],
-                    phenotype[frame],
-                )
+            "{}\t{:.2f}\t{:.2f}\t{:.2f}\t{:.2f}\t{:.2f}\t{}\n".format(
+                frame,
+                window.pullbackLength[frame],
+                lumen_area[frame],
+                plaque_area[frame],
+                vessel_area[frame],
+                plaque_burden[frame],
+                phenotype[frame],
             )
-        f.close()
+        )
+    f.close()
 
-        self.successMessage("Write report")
+    window.successMessage("Write report")
 
 
 def computeMetrics(self, masks):

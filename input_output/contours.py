@@ -158,8 +158,8 @@ def computeContourMetrics(window, lumen, plaque):
     plaque_burden = np.zeros_like(lumen_area)
     for i in range(numberOfFrames):
         if lumen[0][i]:
-            lumen_area[i] = window.contourArea(lumen[0][i], lumen[1][i]) * window.resolution**2
-            plaque_area[i] = window.contourArea(plaque[0][i], plaque[1][i]) * window.resolution**2 - lumen_area[i]
+            lumen_area[i] = contourArea(lumen[0][i], lumen[1][i]) * window.resolution**2
+            plaque_area[i] = contourArea(plaque[0][i], plaque[1][i]) * window.resolution**2 - lumen_area[i]
             plaque_burden[i] = (plaque_area[i] / (lumen_area[i] + plaque_area[i])) * 100
 
     return (lumen_area, plaque_area, plaque_burden)
