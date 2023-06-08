@@ -28,9 +28,9 @@ def read(path, frames=[]):
 
     tree = ET.parse(path)
     root = tree.getroot()
-    print(root.tag)
+    # print(root.tag)
     root.attrib
-    print(root[0].text)
+    # print(root[0].text)
     lumen_points = []
     vessel_points = []
     stent_points = []

@@ -260,7 +260,7 @@ class Master(QMainWindow):
             self.slider.addGatedFrames(self.gated_frames)
             self.useGatedBox.setChecked(True)
             self.useDiastolicBox.setChecked(True)
-            self.successMessage("Diastolic/Systolic frame (change with up and down arrows) extraction")
+            # self.successMessage("Diastolic/Systolic frame (change with up and down arrows) extraction")
         else:
             warning = QErrorMessage()
             warning.setWindowModality(Qt.WindowModal)

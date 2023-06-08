@@ -77,6 +77,9 @@ def readDICOM(window):
         except FileNotFoundError:
             pass
 
+        # extract gated frames
+        window.gate()
+
 
 def parseDICOM(window):
     """Parses DICOM metadata"""

@@ -34,18 +34,10 @@ def readContours(window, fileName=None):
         fileName, _ = QFileDialog.getOpenFileName(
             window, "QFileDialog.getOpenFileName()", "", "XML file (*.xml)", options=options
         )
-        
-    if fileName:
-        window.lumen, window.plaque, window.stent, window.resolution, frames = read(fileName)
 
-        # if len(window.lumen[0]) != window.dicom.NumberOfFrames:
-        #     warning = QErrorMessage()
-        #     warning.setWindowModality(Qt.WindowModal)
-        #     warning.showMessage(
-        #         'Reading of contours failed. File must contain the same number of frames as loaded dicom'
-        #     )
-        #     warning.exec_()
-        # else:
+    if fileName:
+        window.lumen, window.plaque, window.stent, window.resolution, _ = read(fileName)
+
         window.resolution = float(window.resolution[0])
         window.lumen = mapToList(window.lumen)
         window.plaque = mapToList(window.plaque)
@@ -53,13 +45,6 @@ def readContours(window, fileName=None):
         window.contours = True
         window.wid.setData(window.lumen, window.plaque, window.stent, window.images)
         window.hideBox.setChecked(False)
-
-        gatedFrames = [
-            frame for frame in range(len(window.lumen[0])) if window.lumen[0][frame] or window.plaque[0][frame]
-        ]
-        window.gatedFrames = gatedFrames
-        window.useGatedBox.setChecked(True)
-        window.slider.addGatedFrames(window.gatedFrames)
 
 
 def writeContours(window):
@@ -91,7 +76,7 @@ def writeContours(window):
 
     if not window.segmentation and not window.contours:
         window.errorMessage()
-    
+
     frames = list(range(window.numberOfFrames))
     write_xml(
         x,
