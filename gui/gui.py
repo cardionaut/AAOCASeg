@@ -102,7 +102,7 @@ class Master(QMainWindow):
         self.infoTable.horizontalHeader().setStretchLastSection(True)
 
         dicomButton.clicked.connect(lambda _: readDICOM(self))
-        contoursButton.clicked.connect(lambda _: readContours(self))
+        contoursButton.clicked.connect(lambda _: readContours(self, None))
         segmentButton.clicked.connect(lambda _: segment(self))
         splineButton.clicked.connect(lambda _: newSpline(self))
         gatingButton.clicked.connect(self.gate)

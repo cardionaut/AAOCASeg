@@ -14,7 +14,7 @@ from input_output.read_xml import read
 from input_output.write_xml import write_xml, mask_image, get_contours
 
 
-def readContours(window):
+def readContours(window, fileName=None):
     """Reads contours.
 
     Reads contours  saved in xml format (Echoplaque compatible) and
@@ -28,11 +28,13 @@ def readContours(window):
         warning.exec_()
         return
 
-    options = QFileDialog.Options()
-    options |= QFileDialog.DontUseNativeDialog
-    fileName, _ = QFileDialog.getOpenFileName(
-        window, "QFileDialog.getOpenFileName()", "", "XML file (*.xml)", options=options
-    )
+    if fileName is None:
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        fileName, _ = QFileDialog.getOpenFileName(
+            window, "QFileDialog.getOpenFileName()", "", "XML file (*.xml)", options=options
+        )
+        
     if fileName:
         window.lumen, window.plaque, window.stent, window.resolution, frames = read(fileName)
 

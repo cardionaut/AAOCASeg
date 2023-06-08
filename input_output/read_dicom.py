@@ -1,8 +1,9 @@
+import os
+
 import pydicom as dcm
 import numpy as np
 from loguru import logger
 from PyQt5.QtWidgets import (
-    QMainWindow,
     QInputDialog,
     QMessageBox,
     QLineEdit,
@@ -10,6 +11,8 @@ from PyQt5.QtWidgets import (
     QTableWidgetItem,
 )
 from PyQt5.QtCore import Qt
+
+from input_output.contours import readContours
 
 
 def readDICOM(window):
@@ -67,6 +70,12 @@ def readDICOM(window):
 
         window.wid.setData(window.lumen, window.plaque, window.stent, window.images)
         window.slider.setValue(window.numberOfFrames - 1)
+
+        # read contours if available
+        try:
+            readContours(window, os.path.splitext(window.file_name)[0] + '_contours.xml')
+        except FileNotFoundError:
+            pass
 
 
 def parseDICOM(window):
