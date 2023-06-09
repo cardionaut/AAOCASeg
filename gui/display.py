@@ -166,13 +166,14 @@ class Display(QGraphicsView):
                 lumen = Spline([self.lumen[0][frame], self.lumen[1][frame]], 'r')
                 lumenContour[0].append(list(lumen.points[0]))
                 lumenContour[1].append(list(lumen.points[1]))
+            else:
+                lumenContour[0].append([])
+                lumenContour[1].append([])
             if self.plaque[0][frame]:
                 plaque = Spline([self.plaque[0][frame], self.plaque[1][frame]], 'y')
                 plaqueContour[0].append(list(plaque.points[0]))
                 plaqueContour[1].append(list(plaque.points[1]))
             else:
-                lumenContour[0].append([])
-                lumenContour[1].append([])
                 plaqueContour[0].append([])
                 plaqueContour[1].append([])
 

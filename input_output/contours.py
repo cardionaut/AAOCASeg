@@ -61,7 +61,14 @@ def writeContours(window):
 
     # reformat data for compatibility with write_xml function
     x, y = [], []
-    for i in range(len(window.lumen[0])):
+    for i in range(window.numberOfFrames):
+        if i < len(window.lumen[0]):
+            new_x_lumen = window.lumen[0][i]
+            new_y_lumen = window.lumen[1][i]
+        else:
+            new_x_lumen = []
+            new_y_lumen = []
+
         if i < len(window.plaque[0]):
             new_x_plaque = window.plaque[0][i]
             new_y_plaque = window.plaque[1][i]
@@ -69,9 +76,9 @@ def writeContours(window):
             new_x_plaque = []
             new_y_plaque = []
 
-        x.append(window.lumen[0][i])
+        x.append(new_x_lumen)
         x.append(new_x_plaque)
-        y.append(window.lumen[1][i])
+        y.append(new_y_lumen)
         y.append(new_y_plaque)
 
     if not window.segmentation and not window.contours:
