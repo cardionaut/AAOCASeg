@@ -45,13 +45,14 @@ class Master(QMainWindow):
         super().__init__()
         self.image = False
         self.contours = False
-        self.segmentation = True  # segmentation to do
+        self.segmentation = False
         self.lumen = ()
         self.plaque = ()
         self.initGUI()
 
     def initGUI(self):
-        self.setGeometry(100, 100, 1200, 1200)
+        spacing = 10
+        self.setGeometry(spacing, spacing, 1200, 1200)
         self.display_size = 800
         self.addToolBar("MY Window")
         self.showMaximized()
@@ -64,8 +65,8 @@ class Master(QMainWindow):
         vbox2 = QVBoxLayout()
         vbox1hbox1 = QHBoxLayout()
 
-        vbox1.setContentsMargins(0, 0, 100, 100)
-        vbox2.setContentsMargins(100, 0, 0, 100)
+        vbox1.setContentsMargins(0, 0, spacing, spacing)
+        vbox2.setContentsMargins(spacing, 0, 0, spacing)
         vbox2hbox1 = QHBoxLayout()
         vbox2.addLayout(vbox2hbox1)
         layout.addLayout(vbox1)

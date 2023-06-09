@@ -2,8 +2,6 @@ import os
 
 import numpy as np
 
-from input_output.contours import computeContourMetrics
-
 
 def report(window):
     """Writes a report file containing lumen area, plaque, area, vessel area, plaque burden, phenotype"""
@@ -41,12 +39,25 @@ def report(window):
     window.successMessage("Write report")
 
 
-def computeMetrics(self, masks):
-    """Measures lumen area, plaque area and plaque burden"""
+def computeContourMetrics(window, lumen, plaque):
+    """Computes lumen area, plaque area and plaque burden from contours"""
 
-    lumen, plaque = 1, 2
-    lumen_area = np.sum(masks == lumen, axis=(1, 2)) * self.resolution**2
-    plaque_area = np.sum(masks == plaque, axis=(1, 2)) * self.resolution**2
-    plaque_burden = (plaque_area / (lumen_area + plaque_area)) * 100
+    numberOfFrames = len(lumen[0])
+    lumen_area = np.zeros((numberOfFrames))
+    plaque_area = np.zeros_like(lumen_area)
+    plaque_burden = np.zeros_like(lumen_area)
+    for i in range(numberOfFrames):
+        if lumen[0][i]:
+            lumen_area[i] = contourArea(lumen[0][i], lumen[1][i]) * window.resolution**2
+            plaque_area[i] = contourArea(plaque[0][i], plaque[1][i]) * window.resolution**2 - lumen_area[i]
+            plaque_burden[i] = (plaque_area[i] / (lumen_area[i] + plaque_area[i])) * 100
 
     return (lumen_area, plaque_area, plaque_burden)
+
+
+def contourArea(x, y):
+    """Calculate contour/polygon area using Shoelace formula"""
+
+    area = 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
+
+    return area

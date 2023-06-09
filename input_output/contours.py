@@ -12,6 +12,7 @@ from PyQt5.QtCore import Qt
 
 from input_output.read_xml import read
 from input_output.write_xml import write_xml, mask_image, get_contours
+from segmentation.neural_net import predict
 
 
 def readContours(window, fileName=None):
@@ -105,7 +106,56 @@ def reset_contours(window):
 
 def segment(window):
     """Segmentation and phenotyping of IVUS images"""
-    pass
+
+    save_path = os.path.join(os.getcwd(), "model", "saved_model.pb")
+    if not os.path.isfile(save_path):
+        message = "No saved weights have been found, check that weights are saved in {}".format(
+            os.path.join(os.getcwd(), "model")
+        )
+        error = QMessageBox()
+        error.setIcon(QMessageBox.Critical)
+        error.setWindowTitle("Error")
+        error.setModal(True)
+        error.setWindowModality(Qt.WindowModal)
+        error.setText(message)
+        error.exec_()
+        return -1
+
+    # warning = QErrorMessage()
+    # warning.setWindowModality(Qt.WindowModal)
+    # warning.showMessage(
+    #     "Warning: IVUS Phenotyping is currently only supported for 20MHz images. Interpret other images with extreme caution"
+    # )
+    # warning.exec_()
+
+    image_dim = window.images.shape
+
+    if window.segmentation:  # keep previous segmentation
+        masks = window.masks
+    else:  # perform first segmentation
+        masks = np.zeros((window.numberOfFrames, image_dim[1], image_dim[2]), dtype=np.uint8)
+
+    masks_gated = predict(window.images[window.gated_frames, :, :])
+    masks[window.gated_frames, :, :] = masks_gated
+    window.masks = masks
+
+    # compute metrics such as plaque burden
+    window.metrics = computeMetrics(window, masks)
+    window.segmentation = True
+
+    # convert masks to contours
+    window.lumen, window.plaque = maskToContours(masks)
+    window.contours = True
+
+    # stent contours currently unsupported so create empty list
+    window.stent = [
+        [[] for i in range(image_dim[0])],
+        [[] for i in range(image_dim[0])],
+    ]
+
+    window.wid.setData(window.lumen, window.plaque, window.stent, window.images)
+    window.hideBox.setChecked(False)
+    window.successMessage("Segmentation")
 
 
 def newSpline(window):
@@ -148,26 +198,13 @@ def maskToContours(masks):
     return lumen_pred, plaque_pred
 
 
-def contourArea(x, y):
-    """Calculate contour/polygon area using Shoelace formula"""
+def computeMetrics(window, masks):
+    """Measures lumen area, plaque area and plaque burden"""
 
-    area = 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
-
-    return area
-
-
-def computeContourMetrics(window, lumen, plaque):
-    """Computes lumen area, plaque area and plaque burden from contours"""
-
-    numberOfFrames = len(lumen[0])
-    lumen_area = np.zeros((numberOfFrames))
-    plaque_area = np.zeros_like(lumen_area)
-    plaque_burden = np.zeros_like(lumen_area)
-    for i in range(numberOfFrames):
-        if lumen[0][i]:
-            lumen_area[i] = contourArea(lumen[0][i], lumen[1][i]) * window.resolution**2
-            plaque_area[i] = contourArea(plaque[0][i], plaque[1][i]) * window.resolution**2 - lumen_area[i]
-            plaque_burden[i] = (plaque_area[i] / (lumen_area[i] + plaque_area[i])) * 100
+    lumen, plaque = 1, 2
+    lumen_area = np.sum(masks == lumen, axis=(1, 2)) * window.resolution**2
+    plaque_area = np.sum(masks == plaque, axis=(1, 2)) * window.resolution**2
+    plaque_burden = (plaque_area / (lumen_area + plaque_area)) * 100
 
     return (lumen_area, plaque_area, plaque_burden)
 
