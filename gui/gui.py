@@ -1,4 +1,5 @@
 import time
+import qdarktheme
 
 from loguru import logger
 from PyQt5.QtWidgets import (
@@ -49,6 +50,8 @@ class Master(QMainWindow):
         self.initGUI()
 
     def initGUI(self):
+        qdarktheme.enable_hi_dpi()
+        qdarktheme.setup_theme('auto')
         self.setGeometry(100, 100, 1200, 1200)
         self.display_size = 800
         self.addToolBar("MY Window")
