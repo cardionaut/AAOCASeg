@@ -1,5 +1,4 @@
 import time
-import qdarktheme
 
 from loguru import logger
 from PyQt5.QtWidgets import (
@@ -17,6 +16,8 @@ from PyQt5.QtWidgets import (
     QTableWidget,
     QTableWidgetItem,
     QErrorMessage,
+    QMenuBar,
+    QMenu,
 )
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QIcon
@@ -50,13 +51,14 @@ class Master(QMainWindow):
         self.initGUI()
 
     def initGUI(self):
-        qdarktheme.enable_hi_dpi()
-        qdarktheme.setup_theme('auto')
         self.setGeometry(100, 100, 1200, 1200)
         self.display_size = 800
         self.addToolBar("MY Window")
         self.showMaximized()
 
+        menuBar = QMenuBar(self)
+        self.setMenuBar(menuBar)
+        helpMenu = menuBar.addMenu('Help')
         layout = QHBoxLayout()
         vbox1 = QVBoxLayout()
         vbox2 = QVBoxLayout()
@@ -69,17 +71,13 @@ class Master(QMainWindow):
         layout.addLayout(vbox1)
         layout.addLayout(vbox2)
 
-        dicomButton = QPushButton('Read DICOM')
-        # contoursButton = QPushButton('Read Contours')
-        # gatingButton = QPushButton('Extract Diastolic and Systolic Frames')
+        dicomButton = QPushButton('&Read DICOM')
         segmentButton = QPushButton('Segment')
         splineButton = QPushButton('Manual Contour')
-        writeButton = QPushButton('Write Contours')
+        writeButton = QPushButton('Write &Contours')
         reportButton = QPushButton('Write Report')
 
         dicomButton.setToolTip("Load images in .dcm format")
-        # contoursButton.setToolTip("Load saved contours in .xml format")
-        # gatingButton.setToolTip("Extract diastolic and systolic images from pullback")
         segmentButton.setToolTip("Run deep learning based segmentation of lumen and plaque")
         splineButton.setToolTip("Manually draw new contour for lumen, plaque or stent")
         writeButton.setToolTip("Save contours in .xml file")
@@ -105,8 +103,6 @@ class Master(QMainWindow):
         self.infoTable.horizontalHeader().setStretchLastSection(True)
 
         dicomButton.clicked.connect(lambda _: readDICOM(self))
-        # contoursButton.clicked.connect(lambda _: readContours(self, None))
-        # gatingButton.clicked.connect(self.gate)
         segmentButton.clicked.connect(lambda _: segment(self))
         splineButton.clicked.connect(lambda _: newSpline(self))
         writeButton.clicked.connect(lambda _: writeContours(self))
@@ -124,14 +120,9 @@ class Master(QMainWindow):
         self.slider = Slider(Qt.Horizontal)
         self.slider.valueChanged[int].connect(self.changeValue)
 
-        self.hideBox = QCheckBox('Hide Contours')
+        self.hideBox = QCheckBox('&Hide Contours')
         self.hideBox.setChecked(True)
         self.hideBox.stateChanged[int].connect(self.changeState)
-        self.useGatedBox = QCheckBox('Gated Frames')
-        self.useGatedBox.stateChanged[int].connect(self.useGated)
-        self.useGatedBox.setToolTip(
-            "When this is checked only gated frames will be segmented and only gated frames statistics will be written to the report"
-        )
         self.useDiastolicBox = QCheckBox('Diastolic Frames')
         self.useDiastolicBox.stateChanged[int].connect(self.useDiastolic)
         self.useDiastolicBox.setToolTip("Check for diastolic frames, uncheck for systolic frames")
@@ -152,11 +143,8 @@ class Master(QMainWindow):
         vbox1.addWidget(self.text)
 
         vbox2.addWidget(self.hideBox)
-        vbox2.addWidget(self.useGatedBox)
         vbox2.addWidget(self.useDiastolicBox)
         vbox2.addWidget(dicomButton)
-        # vbox2.addWidget(contoursButton)
-        # vbox2.addWidget(gatingButton)
         vbox2.addWidget(segmentButton)
         vbox2.addWidget(splineButton)
         vbox2.addWidget(writeButton)
@@ -184,11 +172,12 @@ class Master(QMainWindow):
         if key == Qt.Key_Q:
             self.close()
         elif key == Qt.Key_H:
-            if not self.hideBox.isChecked():
-                self.hideBox.setChecked(True)
-            elif self.hideBox.isChecked():
-                self.hideBox.setChecked(False)
-            self.hideBox.setChecked(self.hideBox.isChecked())
+            if self.image:
+                if not self.hideBox.isChecked():
+                    self.hideBox.setChecked(True)
+                elif self.hideBox.isChecked():
+                    self.hideBox.setChecked(False)
+                self.hideBox.setChecked(self.hideBox.isChecked())
         elif key == Qt.Key_J:
             currentFrame = self.slider.value()
             self.slider.setValue(currentFrame + 1)
@@ -210,6 +199,10 @@ class Master(QMainWindow):
             self.slider.setValue(self.slider.value() + 1)
         elif key == Qt.Key_A:
             self.slider.setValue(self.slider.value() - 1)
+        elif key == Qt.Key_R:
+            readDICOM(self)
+        elif key == Qt.Key_C:
+            writeContours(self)
         elif key == Qt.Key_E:
             if self.image:
                 self.wid.new(self, 2)  # start new manual Lumen contour
@@ -258,12 +251,10 @@ class Master(QMainWindow):
             warning.showMessage("Please first select a DICOM file to be read")
             warning.exec_()
             return
-        
+
         if self.gated_frames is not None:
             self.slider.addGatedFrames(self.gated_frames)
-            self.useGatedBox.setChecked(True)
             self.useDiastolicBox.setChecked(True)
-            # self.successMessage("Diastolic/Systolic frame (change with up and down arrows) extraction")
         else:
             warning = QErrorMessage()
             warning.setWindowModality(Qt.WindowModal)
@@ -274,7 +265,6 @@ class Master(QMainWindow):
         """Automatically saves contours to a temporary file every 180 seconds"""
 
         if self.contours:
-            # logger.info("Automatically saving current contours")
             writeContours(self)
 
     def changeValue(self, value):
@@ -296,7 +286,6 @@ class Master(QMainWindow):
             self.gated_frames = self.gated_frames_sys
 
         self.slider.addGatedFrames(self.gated_frames)
-        self.useGatedBox.setChecked(True)
 
     def errorMessage(self):
         """Helper function for errors"""
