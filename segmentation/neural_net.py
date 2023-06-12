@@ -35,13 +35,12 @@ def predict(images):
         warning = f"Warning: No saved weights have been found, check that weights are saved in {model_path}"
         print(warning)
         
-    batch_size = 64
+    batch_size = 1
     dataset = tf.data.Dataset.from_tensor_slices((images))
     dataset = dataset.map(cast_and_center)
     dataset = dataset.batch(batch_size)
     num_batches = int(np.ceil(images.shape[0] / batch_size))
 
-    """
     progress = QProgressDialog()
     progress.setWindowFlags(Qt.Dialog)
     progress.setModal(True)
@@ -53,7 +52,7 @@ def predict(images):
     progress.setValue(0) # trick to make progress bar appear
     progress.setWindowTitle("Segmenting images")
     progress.show()
-    """
+
     pred = []
     for i, batch in enumerate(dataset):
         batch = set_input_channels(batch)
@@ -61,13 +60,13 @@ def predict(images):
         logits = tf.image.resize(logits, (tf.shape(batch)[1], tf.shape(batch)[2]))
         pred.append(tf.argmax(logits, axis=-1, output_type=tf.dtypes.int32))
         print('Batch {} of {} completed'.format(i + 1, num_batches))
-        # progress.setValue(i)
-        # if progress.wasCanceled():
-        #    break
+        progress.setValue(i)
+        if progress.wasCanceled():
+           break
 
-    # if progress.wasCanceled():
-    #    return None
+    if progress.wasCanceled():
+       return None
 
-    # progress.close()
+    progress.close()
     pred = np.concatenate(pred)
     return pred
