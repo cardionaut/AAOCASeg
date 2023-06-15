@@ -59,7 +59,7 @@ def predict(images):
         logits = model(batch, training=False)
         logits = tf.image.resize(logits, (tf.shape(batch)[1], tf.shape(batch)[2]))
         pred.append(tf.argmax(logits, axis=-1, output_type=tf.dtypes.int32))
-        print('Batch {} of {} completed'.format(i + 1, num_batches))
+        # print('Batch {} of {} completed'.format(i + 1, num_batches))
         progress.setValue(i)
         if progress.wasCanceled():
             break
