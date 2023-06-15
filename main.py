@@ -12,7 +12,6 @@ from filters.nonlocal_means import NonLocalMeansFilter
 from gui.compare_stacks import CompareStacks
 from gui.gui import QApplication, Master
 
-
 @hydra.main(version_base=None, config_path='.', config_name='config')
 def main(config: DictConfig) -> None:
     qdarktheme.enable_hi_dpi()

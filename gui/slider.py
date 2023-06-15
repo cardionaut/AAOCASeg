@@ -1,5 +1,6 @@
 import time
 
+import numpy as np
 from loguru import logger
 from PyQt5.QtWidgets import (
     QSlider,
@@ -77,17 +78,11 @@ class Slider(QSlider):
             self.setValue(self.value() - 1)
 
     def findFrame(self, currentFrame):
-        """Find the closest gated frame.
+        """Find the closest gated frame"""
+        gated_frames = np.asarray(self.gatedFrames)
+        closest_gated_frame = np.argmin(np.abs(gated_frames - currentFrame))
 
-        Args:
-            currentFrame: int, current displayed frame
-        Returns:
-            currentGatedFrame: int, gated frame closest to current displayed frame
-        """
-        frameDiff = [abs(val - currentFrame) for val in self.gatedFrames]
-        currentGatedFrame = [idx for idx in range(len(frameDiff)) if frameDiff[idx] == min(frameDiff)][0]
-
-        return currentGatedFrame
+        return closest_gated_frame
 
     def addGatedFrames(self, gatedFrames):
         """Stores the gated frames."""

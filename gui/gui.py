@@ -68,7 +68,9 @@ class Master(QMainWindow):
         vbox1.setContentsMargins(0, 0, spacing, spacing)
         vbox2.setContentsMargins(spacing, 0, 0, spacing)
         vbox2hbox1 = QHBoxLayout()
+        vbox2hbox2 = QHBoxLayout()
         vbox2.addLayout(vbox2hbox1)
+        vbox2.addLayout(vbox2hbox2)
         layout.addLayout(vbox1)
         layout.addLayout(vbox2)
 
@@ -102,6 +104,24 @@ class Master(QMainWindow):
         self.infoTable.setVerticalHeader(hideHeader1)
         self.infoTable.setHorizontalHeader(hideHeader2)
         self.infoTable.horizontalHeader().setStretchLastSection(True)
+
+        autoSaveInterval = 10000
+        self.shortcutInfo = QLabel()
+        self.shortcutInfo.setText(
+            (
+                '\n'
+                'Press R to read a DICOM file. '
+                'If available, contours for that file will be read automatically. '
+                'Diastolic and systolic frames are extracted automatically.\n'
+                'Use the A and D keys to move through all frames, S and W keys to move through gated frames.\n'
+                'Press E to draw a new Lumen contour.\n'
+                'Press F to draw a new Vessel contour.\n'
+                f'Press C to save all contours (done automatically every {int(autoSaveInterval/1000)} seconds.)\n'
+                'Press H to hide all contours.\n'
+                'Press J to jiggle around the current frame.\n'
+                'Press Q to close the program.\n'
+            )
+        )
 
         dicomButton.clicked.connect(lambda _: readDICOM(self))
         segmentButton.clicked.connect(lambda _: segment(self))
@@ -151,6 +171,7 @@ class Master(QMainWindow):
         vbox2.addWidget(writeButton)
         vbox2.addWidget(reportButton)
         vbox2hbox1.addWidget(self.infoTable)
+        vbox2hbox2.addWidget(self.shortcutInfo)
 
         centralWidget = QWidget()
         centralWidget.setLayout(layout)
@@ -166,7 +187,7 @@ class Master(QMainWindow):
         # pipe.communicate() # block until process completes.
         timer = QTimer(self)
         timer.timeout.connect(self.autoSave)
-        timer.start(10000)  # autosave interval in milliseconds
+        timer.start(autoSaveInterval)  # autosave interval in milliseconds
 
     def keyPressEvent(self, event):
         key = event.key()
@@ -212,11 +233,6 @@ class Master(QMainWindow):
         elif key == Qt.Key_F:
             if self.image:
                 self.wid.new(self, 1)  # start new manual Vessel contour
-                self.hideBox.setChecked(False)
-                self.contours = True
-        elif key == Qt.Key_C:
-            if self.image:
-                self.wid.new(self, 0)  # start new manual Stent contour
                 self.hideBox.setChecked(False)
                 self.contours = True
 
