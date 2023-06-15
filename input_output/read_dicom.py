@@ -74,6 +74,7 @@ def readDICOM(window):
         # read contours if available
         try:
             readContours(window, os.path.splitext(window.file_name)[0] + '_contours.xml')
+            window.segmentation = True
         except FileNotFoundError:
             pass
 

@@ -1,4 +1,5 @@
 import time
+import bisect
 
 from loguru import logger
 from PyQt5.QtWidgets import (
@@ -138,15 +139,23 @@ class Master(QMainWindow):
         self.playButton.clicked.connect(self.play)
         self.paused = True
 
+        self.diastolicFrameBox = QCheckBox('Diastolic Frame')
+        self.diastolicFrameBox.setChecked(False)
+        self.diastolicFrameBox.stateChanged[int].connect(self.toggleDiastolicFrame)
+        self.systolicFrameBox = QCheckBox('Systolic Frame')
+        self.systolicFrameBox.setChecked(False)
+        self.systolicFrameBox.stateChanged[int].connect(self.toggleSystolicFrame)
+
         self.slider = Slider(Qt.Horizontal)
         self.slider.valueChanged[int].connect(self.changeValue)
 
         self.hideBox = QCheckBox('&Hide Contours')
         self.hideBox.setChecked(True)
         self.hideBox.stateChanged[int].connect(self.changeState)
-        self.useDiastolicBox = QCheckBox('Diastolic Frames')
-        self.useDiastolicBox.stateChanged[int].connect(self.useDiastolic)
-        self.useDiastolicBox.setToolTip("Check for diastolic frames, uncheck for systolic frames")
+        self.useDiastolicButton = QPushButton('Diastolic Frames')
+        self.useDiastolicButton.setCheckable(True)
+        self.useDiastolicButton.clicked.connect(self.useDiastolic)
+        self.useDiastolicButton.setToolTip("Press button to switch between diastolic and systolic frames")
 
         self.wid = Display()
         self.c = Communicate()
@@ -159,12 +168,14 @@ class Master(QMainWindow):
 
         vbox1.addWidget(self.wid)
         vbox1hbox1.addWidget(self.playButton)
+        vbox1hbox1.addWidget(self.diastolicFrameBox)
+        vbox1hbox1.addWidget(self.systolicFrameBox)
         vbox1hbox1.addWidget(self.slider)
         vbox1.addLayout(vbox1hbox1)
         vbox1.addWidget(self.text)
 
         vbox2.addWidget(self.hideBox)
-        vbox2.addWidget(self.useDiastolicBox)
+        vbox2.addWidget(self.useDiastolicButton)
         vbox2.addWidget(dicomButton)
         vbox2.addWidget(segmentButton)
         vbox2.addWidget(splineButton)
@@ -271,7 +282,7 @@ class Master(QMainWindow):
 
         if self.gated_frames is not None:
             self.slider.addGatedFrames(self.gated_frames)
-            self.useDiastolicBox.setChecked(True)
+            self.useDiastolicButton.setChecked(True)
         else:
             warning = QErrorMessage()
             warning.setWindowModality(Qt.WindowModal)
@@ -288,6 +299,17 @@ class Master(QMainWindow):
         self.c.updateBW.emit(value)
         self.wid.run()
         self.text.setText("Frame {}".format(value + 1))
+        try:
+            if value in self.gated_frames_dia:
+                self.diastolicFrameBox.setChecked(True)
+            else:
+                self.diastolicFrameBox.setChecked(False)
+                if value in self.gated_frames_sys:
+                    self.systolicFrameBox.setChecked(True)
+                else:
+                    self.systolicFrameBox.setChecked(False)
+        except AttributeError:
+            pass
 
     def changeState(self, value):
         self.c.updateBool.emit(value)
@@ -296,13 +318,48 @@ class Master(QMainWindow):
     def useGated(self, value):
         self.gated = value
 
-    def useDiastolic(self, value):
-        if value:
-            self.gated_frames = self.gated_frames_dia
-        else:
-            self.gated_frames = self.gated_frames_sys
+    def useDiastolic(self):
+        if self.image:
+            if self.useDiastolicButton.isChecked():
+                self.useDiastolicButton.setText('Diastolic Frames')
+                self.useDiastolicButton.setStyleSheet('background-color: #192f91')
+                self.gated_frames = self.gated_frames_dia
+            else:
+                self.useDiastolicButton.setText('Systolic Frames')
+                self.useDiastolicButton.setStyleSheet('background-color: #912519')
+                self.gated_frames = self.gated_frames_sys
 
-        self.slider.addGatedFrames(self.gated_frames)
+            self.slider.addGatedFrames(self.gated_frames)
+
+    def toggleDiastolicFrame(self, state_true):
+        if self.image:
+            if state_true:
+                if self.slider.value() not in self.gated_frames_dia:
+                    bisect.insort_left(self.gated_frames_dia, self.slider.value())
+                try:  # frame cannot be diastolic and systolic at the same time
+                    self.systolicFrameBox.setChecked(False)
+                except ValueError:
+                    pass
+            elif not state_true:
+                try:
+                    self.gated_frames_dia.remove(self.slider.value())
+                except ValueError:
+                    pass
+
+    def toggleSystolicFrame(self, state_true):
+        if self.image:
+            if state_true:
+                if self.slider.value() not in self.gated_frames_sys:
+                    bisect.insort_left(self.gated_frames_sys, self.slider.value())
+                try:  # frame cannot be diastolic and systolic at the same time
+                    self.diastolicFrameBox.setChecked(False)
+                except ValueError:
+                    pass
+            elif not state_true:
+                try:
+                    self.gated_frames_sys.remove(self.slider.value())
+                except ValueError:
+                    pass
 
     def errorMessage(self):
         """Helper function for errors"""

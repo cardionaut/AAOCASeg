@@ -135,8 +135,7 @@ def segment(window):
     else:  # perform first segmentation
         masks = np.zeros((window.numberOfFrames, image_dim[1], image_dim[2]), dtype=np.uint8)
 
-    masks_gated = predict(window.images[window.gated_frames, :, :])
-    masks[window.gated_frames, :, :] = masks_gated
+    masks[window.gated_frames, :, :] = predict(window.images[window.gated_frames, :, :])
     window.masks = masks
 
     # compute metrics such as plaque burden
@@ -155,7 +154,6 @@ def segment(window):
 
     window.wid.setData(window.lumen, window.plaque, window.stent, window.images)
     window.hideBox.setChecked(False)
-    window.successMessage("Segmentation")
 
 
 def newSpline(window):
