@@ -1,10 +1,18 @@
 import os
 
 import numpy as np
-
+from PyQt5.QtWidgets import QErrorMessage
+from PyQt5.QtCore import Qt
 
 def report(window):
     """Writes a report file containing lumen area, plaque, area, vessel area, plaque burden, phenotype"""
+
+    if not window.image:
+        warning = QErrorMessage()
+        warning.setWindowModality(Qt.WindowModal)
+        warning.showMessage('Cannot write report before reading DICOM file')
+        warning.exec_()
+        return
 
     if window.segmentation and not window.contours:
         window.errorMessage()

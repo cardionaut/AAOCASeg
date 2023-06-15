@@ -103,6 +103,13 @@ def reset_contours(window):
 def segment(window):
     """Segmentation and phenotyping of IVUS images"""
 
+    if not window.image:
+        warning = QErrorMessage()
+        warning.setWindowModality(Qt.WindowModal)
+        warning.showMessage('Cannot perform automatic segmentation before reading DICOM file')
+        warning.exec_()
+        return
+
     save_path = os.path.join(os.getcwd(), "model", "saved_model.pb")
     if not os.path.isfile(save_path):
         message = "No saved weights have been found, check that weights are saved in {}".format(
@@ -126,7 +133,7 @@ def segment(window):
 
     image_dim = window.images.shape
 
-    if window.segmentation:  # keep previous segmentation
+    if hasattr(window, 'masks'):  # keep previous segmentation
         masks = window.masks
     else:  # perform first segmentation
         masks = np.zeros((window.numberOfFrames, image_dim[1], image_dim[2]), dtype=np.uint8)
@@ -136,7 +143,6 @@ def segment(window):
 
     # compute metrics such as plaque burden
     window.metrics = computeMetrics(window, masks)
-    window.segmentation = True
 
     # convert masks to contours
     window.lumen, window.plaque = maskToContours(masks)

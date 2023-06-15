@@ -46,7 +46,6 @@ class Master(QMainWindow):
         super().__init__()
         self.image = False
         self.contours = False
-        self.segmentation = False
         self.lumen = ()
         self.plaque = ()
         self.gated_frames_dia = []
@@ -230,13 +229,13 @@ class Master(QMainWindow):
                 time.sleep(0.1)
                 self.slider.setValue(currentFrame)
                 QApplication.processEvents()
-        elif key == Qt.Key_W:
+        elif key == Qt.Key_W or key == Qt.Key_Up:
             self.slider.next_gated_frame()
-        elif key == Qt.Key_S:
+        elif key == Qt.Key_S or key == Qt.Key_Down:
             self.slider.last_gated_frame()
-        elif key == Qt.Key_D:
+        elif key == Qt.Key_D or key == Qt.Key_Right:
             self.slider.setValue(self.slider.value() + 1)
-        elif key == Qt.Key_A:
+        elif key == Qt.Key_A or key == Qt.Key_Left:
             self.slider.setValue(self.slider.value() - 1)
         elif key == Qt.Key_R:
             readDICOM(self)
