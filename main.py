@@ -3,13 +3,9 @@ import sys
 import hydra
 import qdarktheme
 
-import numpy as np
 from omegaconf import DictConfig
 from loguru import logger
 
-from preprocessing.preprocessing import PreProcessing
-from filters.nonlocal_means import NonLocalMeansFilter
-from gui.compare_stacks import CompareStacks
 from gui.gui import QApplication, Master
 
 @hydra.main(version_base=None, config_path='.', config_name='config')

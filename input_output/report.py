@@ -19,12 +19,13 @@ def report(window):
 
     f = open(os.path.splitext(window.file_name)[0] + "_report.txt", "w")
     f.write(
-        "Frame\tPosition (mm)\tLumen area (mm\N{SUPERSCRIPT TWO})\tPlaque area (mm\N{SUPERSCRIPT TWO})\tVessel area (mm\N{SUPERSCRIPT TWO})\tPlaque burden (%)\tphenotype\n"
+        "Frame\tPosition (mm)\tLumen area (mm\N{SUPERSCRIPT TWO})\tPlaque area (mm\N{SUPERSCRIPT TWO})\t"
+        "Vessel area (mm\N{SUPERSCRIPT TWO})\tPlaque burden (%)\tPhenotype\tPhase\n"
     )
 
     for _, frame in enumerate(frames):
         f.write(
-            "{}\t{:.2f}\t{:.2f}\t{:.2f}\t{:.2f}\t{:.2f}\t{}\n".format(
+            "{}\t{:.2f}\t{:.2f}\t{:.2f}\t{:.2f}\t{:.2f}\t{}\t{}\n".format(
                 frame,
                 window.pullbackLength[frame],
                 lumen_area[frame],
@@ -32,6 +33,7 @@ def report(window):
                 vessel_area[frame],
                 plaque_burden[frame],
                 phenotype[frame],
+                window.phases[frame]
             )
         )
     f.close()

@@ -49,6 +49,10 @@ class Master(QMainWindow):
         self.segmentation = False
         self.lumen = ()
         self.plaque = ()
+        self.gated_frames_dia = []
+        self.gated_frames_sys = []
+        self.distance_frames= []
+        self.phases = []
         self.initGUI()
 
     def initGUI(self):
@@ -113,11 +117,10 @@ class Master(QMainWindow):
                 '\n'
                 'Press R to read a DICOM file. '
                 'If available, contours for that file will be read automatically. '
-                'Diastolic and systolic frames are extracted automatically.\n'
                 'Use the A and D keys to move through all frames, S and W keys to move through gated frames.\n'
                 'Press E to draw a new Lumen contour.\n'
                 'Press F to draw a new Vessel contour.\n'
-                f'Press C to save all contours (done automatically every {int(autoSaveInterval/1000)} seconds.)\n'
+                f'Press C to save all contours (done automatically every {int(autoSaveInterval/1000)} seconds).\n'
                 'Press H to hide all contours.\n'
                 'Press J to jiggle around the current frame.\n'
                 'Press Q to close the program.\n'
@@ -139,6 +142,9 @@ class Master(QMainWindow):
         self.playButton.clicked.connect(self.play)
         self.paused = True
 
+        self.slider = Slider(Qt.Horizontal)
+        self.slider.valueChanged[int].connect(self.changeValue)
+
         self.diastolicFrameBox = QCheckBox('Diastolic Frame')
         self.diastolicFrameBox.setChecked(False)
         self.diastolicFrameBox.stateChanged[int].connect(self.toggleDiastolicFrame)
@@ -146,14 +152,13 @@ class Master(QMainWindow):
         self.systolicFrameBox.setChecked(False)
         self.systolicFrameBox.stateChanged[int].connect(self.toggleSystolicFrame)
 
-        self.slider = Slider(Qt.Horizontal)
-        self.slider.valueChanged[int].connect(self.changeValue)
-
         self.hideBox = QCheckBox('&Hide Contours')
         self.hideBox.setChecked(True)
         self.hideBox.stateChanged[int].connect(self.changeState)
         self.useDiastolicButton = QPushButton('Diastolic Frames')
+        self.useDiastolicButton.setStyleSheet('background-color: #192f91')
         self.useDiastolicButton.setCheckable(True)
+        self.useDiastolicButton.setChecked(True)
         self.useDiastolicButton.clicked.connect(self.useDiastolic)
         self.useDiastolicButton.setToolTip("Press button to switch between diastolic and systolic frames")
 
@@ -168,9 +173,9 @@ class Master(QMainWindow):
 
         vbox1.addWidget(self.wid)
         vbox1hbox1.addWidget(self.playButton)
+        vbox1hbox1.addWidget(self.slider)
         vbox1hbox1.addWidget(self.diastolicFrameBox)
         vbox1hbox1.addWidget(self.systolicFrameBox)
-        vbox1hbox1.addWidget(self.slider)
         vbox1.addLayout(vbox1hbox1)
         vbox1.addWidget(self.text)
 
@@ -212,18 +217,19 @@ class Master(QMainWindow):
                     self.hideBox.setChecked(False)
                 self.hideBox.setChecked(self.hideBox.isChecked())
         elif key == Qt.Key_J:
-            currentFrame = self.slider.value()
-            self.slider.setValue(currentFrame + 1)
-            QApplication.processEvents()
-            time.sleep(0.1)
-            self.slider.setValue(currentFrame)
-            QApplication.processEvents()
-            time.sleep(0.1)
-            self.slider.setValue(currentFrame - 1)
-            QApplication.processEvents()
-            time.sleep(0.1)
-            self.slider.setValue(currentFrame)
-            QApplication.processEvents()
+            if self.image:
+                currentFrame = self.slider.value()
+                self.slider.setValue(currentFrame + 1)
+                QApplication.processEvents()
+                time.sleep(0.1)
+                self.slider.setValue(currentFrame)
+                QApplication.processEvents()
+                time.sleep(0.1)
+                self.slider.setValue(currentFrame - 1)
+                QApplication.processEvents()
+                time.sleep(0.1)
+                self.slider.setValue(currentFrame)
+                QApplication.processEvents()
         elif key == Qt.Key_W:
             self.slider.next_gated_frame()
         elif key == Qt.Key_S:
@@ -290,9 +296,8 @@ class Master(QMainWindow):
             warning.exec_()
 
     def autoSave(self):
-        """Automatically saves contours to a temporary file every 180 seconds"""
-
-        if self.contours:
+        """Automatically saves contours to a temporary file every ... seconds"""
+        if self.image:
             writeContours(self)
 
     def changeValue(self, value):
@@ -333,31 +338,37 @@ class Master(QMainWindow):
 
     def toggleDiastolicFrame(self, state_true):
         if self.image:
+            frame = self.slider.value()
             if state_true:
-                if self.slider.value() not in self.gated_frames_dia:
-                    bisect.insort_left(self.gated_frames_dia, self.slider.value())
+                if frame not in self.gated_frames_dia:
+                    bisect.insort_left(self.gated_frames_dia, frame)
+                    self.phases[frame] = 'D'
                 try:  # frame cannot be diastolic and systolic at the same time
                     self.systolicFrameBox.setChecked(False)
                 except ValueError:
                     pass
             elif not state_true:
                 try:
-                    self.gated_frames_dia.remove(self.slider.value())
+                    self.gated_frames_dia.remove(frame)
+                    self.phases[frame] = '-'
                 except ValueError:
                     pass
 
     def toggleSystolicFrame(self, state_true):
         if self.image:
+            frame = self.slider.value()
             if state_true:
-                if self.slider.value() not in self.gated_frames_sys:
-                    bisect.insort_left(self.gated_frames_sys, self.slider.value())
+                if frame not in self.gated_frames_sys:
+                    bisect.insort_left(self.gated_frames_sys, frame)
+                    self.phases[frame] = 'S'
                 try:  # frame cannot be diastolic and systolic at the same time
                     self.diastolicFrameBox.setChecked(False)
                 except ValueError:
                     pass
             elif not state_true:
                 try:
-                    self.gated_frames_sys.remove(self.slider.value())
+                    self.gated_frames_sys.remove(frame)
+                    self.phases[frame] = '-'
                 except ValueError:
                     pass
 

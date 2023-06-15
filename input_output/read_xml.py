@@ -36,6 +36,7 @@ def read(path, frames=[]):
     stent_points = []
     no_points = []
     framelist = []
+    phases=[]
     lumen={}
     vessel={}
     stent={}
@@ -67,6 +68,7 @@ def read(path, frames=[]):
                 vessel_subpoints = []
                 stent_subpoints = []
                 if frameNo in frames:
+                    phases.append(frame.find('Phase').text)
                     for pts in frame.iter('Ctr'):
                         framelist.append(frameNo)
                         for child in pts:
@@ -107,4 +109,4 @@ def read(path, frames=[]):
     # print((xres, yres))
 
     #return (Lx, Ly), (Vx, Vy), (Sx, Sy), [xres, yres], framelist
-    return (Lx, Ly), (Vx, Vy), (Sx, Sy), [xres, yres], [xdim, ydim, zdim]
+    return (Lx, Ly), (Vx, Vy), (Sx, Sy), [xres, yres], [xdim, ydim, zdim], phases

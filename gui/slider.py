@@ -62,12 +62,15 @@ class Slider(QSlider):
             currentGatedFrame = self.findFrame(self.value())
             if self.value() >= self.gatedFrames[currentGatedFrame]:
                 currentGatedFrame = currentGatedFrame + 1
-            if currentGatedFrame > self.maxFrame:
-                currentGatedFrame = self.maxFrame
-            self.setValue(self.gatedFrames[currentGatedFrame])
+            try:
+                self.setValue(self.gatedFrames[currentGatedFrame])
+            except IndexError:
+                pass
         else:
-            self.setValue(self.value() + 1)
-
+            try:
+                self.setValue(self.value() + 1)
+            except IndexError:
+                pass
     def last_gated_frame(self):
         if self.gatedFrames:
             currentGatedFrame = self.findFrame(self.value())
@@ -90,4 +93,3 @@ class Slider(QSlider):
         """Stores the gated frames."""
 
         self.gatedFrames = gatedFrames
-        self.maxFrame = len(self.gatedFrames) - 1

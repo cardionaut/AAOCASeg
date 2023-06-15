@@ -75,11 +75,13 @@ def readDICOM(window):
         try:
             readContours(window, os.path.splitext(window.file_name)[0] + '_contours.xml')
             window.segmentation = True
+            window.gated_frames_dia = [frame for frame in range(window.numberOfFrames) if window.phases[frame] == 'D']
+            window.gated_frames = window.gated_frames_dia
+            window.slider.addGatedFrames(window.gated_frames)
+            window.gated_frames_sys = [frame for frame in range(window.numberOfFrames) if window.phases[frame] == 'S']
         except FileNotFoundError:
+            window.phases = ['-'] * window.numberOfFrames
             pass
-
-        # extract gated frames
-        window.gate()
 
 
 def parseDICOM(window):

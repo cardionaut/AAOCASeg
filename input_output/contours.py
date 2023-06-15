@@ -37,7 +37,7 @@ def readContours(window, fileName=None):
         )
 
     if fileName:
-        window.lumen, window.plaque, window.stent, window.resolution, _ = read(fileName)
+        window.lumen, window.plaque, window.stent, window.resolution, _, window.phases = read(fileName)
 
         window.resolution = float(window.resolution[0])
         window.lumen = mapToList(window.lumen)
@@ -82,17 +82,13 @@ def writeContours(window):
         y.append(new_y_lumen)
         y.append(new_y_plaque)
 
-    if not window.segmentation and not window.contours:
-        window.errorMessage()
-
-    frames = list(range(window.numberOfFrames))
     write_xml(
         x,
         y,
         window.images.shape,
         window.resolution,
         window.ivusPullbackRate,
-        frames,
+        window.phases,
         window.file_name,
     )
 
@@ -148,8 +144,8 @@ def segment(window):
 
     # stent contours currently unsupported so create empty list
     window.stent = [
-        [[] for i in range(image_dim[0])],
-        [[] for i in range(image_dim[0])],
+        [[] for _ in range(image_dim[0])],
+        [[] for _ in range(image_dim[0])],
     ]
 
     window.wid.setData(window.lumen, window.plaque, window.stent, window.images)
