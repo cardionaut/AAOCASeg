@@ -12,7 +12,7 @@ from PyQt5.QtCore import Qt
 
 from input_output.read_xml import read
 from input_output.write_xml import write_xml, mask_image, get_contours
-from segmentation.neural_net import predict
+from segmentation.tf_predict import predict
 
 
 def readContours(window, fileName=None):

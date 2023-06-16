@@ -1,8 +1,11 @@
+import os
+
+import numpy as np
+import tensorflow as tf
+from loguru import logger
 from PyQt5.QtWidgets import QProgressDialog, QMessageBox
 from PyQt5.QtCore import Qt
-import numpy as np
-import os
-import tensorflow as tf
+
 
 IMG_MEAN = tf.constant([60.3486, 60.3486, 60.3486], dtype=tf.float32)
 IMG_MEAN = tf.constant([60.3486], dtype=tf.float32)
@@ -68,5 +71,6 @@ def predict(images):
         return None
 
     progress.close()
+    logger.debug(np.unique(tf.argmax(logits, axis=-1, output_type=tf.dtypes.int32), return_counts=True))
     pred = np.concatenate(pred)
     return pred
