@@ -194,8 +194,11 @@ def write_xml(x, y, dims, resolution, speed, phases, out_path):
         fm = et.SubElement(framestate, 'Fm')
         num = et.SubElement(fm, 'Num')
         num.text = str(frame)
-        phase = et.SubElement(fm, 'Phase')
-        phase.text = phases[frame]
+        try:
+            phase = et.SubElement(fm, 'Phase')
+            phase.text = phases[frame]
+        except IndexError:  # old contour files may not have phases attr
+            pass
 
         for j in range(2):
             try:
