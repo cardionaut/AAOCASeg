@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 from loguru import logger
+from skimage.draw import polygon2mask
 from PyQt5.QtWidgets import (
     QErrorMessage,
     QFileDialog,
@@ -196,6 +197,20 @@ def maskToContours(masks):
     _, _, lumen_pred, plaque_pred = get_contours(masks, levels, image_shape)
 
     return lumen_pred, plaque_pred
+
+
+def contoursToMask(window):
+    """Convert IVUS contours to numpy mask"""
+    mask = np.zeros_like(window.images)
+    image_shape = window.images.shape[1:3]
+    for frame in range(window.numberOfFrames):
+        if window.lumen[0][frame]:
+            lumen_polygon = [[x, y] for x, y in zip(window.lumen[1][frame], window.lumen[0][frame])]
+            vessel_polygon = [[x, y] for x, y in zip(window.plaque[1][frame], window.plaque[0][frame])]
+            mask[frame, :, :] += polygon2mask(image_shape, lumen_polygon).astype(np.uint8)
+            mask[frame, :, :] += polygon2mask(image_shape, vessel_polygon).astype(np.uint8) * 2
+
+    return mask
 
 
 def computeMetrics(window, masks):

@@ -71,6 +71,5 @@ def predict(images):
         return None
 
     progress.close()
-    logger.debug(np.unique(tf.argmax(logits, axis=-1, output_type=tf.dtypes.int32), return_counts=True))
     pred = np.concatenate(pred)
     return pred

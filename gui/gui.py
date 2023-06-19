@@ -115,7 +115,7 @@ class Master(QMainWindow):
             (
                 '\n'
                 'Press R to read a DICOM file. '
-                'If available, contours for that file will be read automatically. '
+                'If available, contours for that file will be read automatically.\n'
                 'Use the A and D keys to move through all frames, S and W keys to move through gated frames.\n'
                 'Press E to draw a new Lumen contour.\n'
                 'Press F to draw a new Vessel contour.\n'
