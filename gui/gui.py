@@ -296,7 +296,7 @@ class Master(QMainWindow):
             self.gated_frames_dia, self.gated_frames_sys, self.distance_frames = preprocessor()
             self.gated_frames = self.gated_frames_dia  # diastolic frames by default
         except AttributeError:  # self.images not defined because no file was read first
-            warning = QErrorMessage()
+            warning = QErrorMessage(self)
             warning.setWindowModality(Qt.WindowModal)
             warning.showMessage("Please first select a DICOM file to be read")
             warning.exec_()
@@ -306,13 +306,13 @@ class Master(QMainWindow):
             self.slider.addGatedFrames(self.gated_frames)
             self.useDiastolicButton.setChecked(True)
         else:
-            warning = QErrorMessage()
+            warning = QErrorMessage(self)
             warning.setWindowModality(Qt.WindowModal)
             warning.showMessage("Diastolic/Systolic frame extraction was unsuccessful")
             warning.exec_()
 
     def autoSave(self):
-        """Automatically saves contours to a temporary file every ... seconds"""
+        """Automatically saves contours to a temporary file every autoSaveInterval seconds"""
         if self.image:
             writeContours(self)
 
@@ -391,7 +391,7 @@ class Master(QMainWindow):
     def errorMessage(self):
         """Helper function for errors"""
 
-        warning = QMessageBox()
+        warning = QMessageBox(self)
         warning.setWindowModality(Qt.WindowModal)
         warning.setWindowTitle("Error")
         warning.setText("Segmentation must be performed first")
@@ -400,7 +400,7 @@ class Master(QMainWindow):
     def successMessage(self, task):
         """Helper function for success messages"""
 
-        success = QMessageBox()
+        success = QMessageBox(self)
         success.setWindowModality(Qt.WindowModal)
         success.setWindowTitle("Status")
         success.setText(task + " has been successfully completed")

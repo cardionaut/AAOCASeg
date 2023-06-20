@@ -24,7 +24,7 @@ def readContours(window, fileName=None):
     """
 
     if not window.image:
-        warning = QErrorMessage()
+        warning = QErrorMessage(window)
         warning.setWindowModality(Qt.WindowModal)
         warning.showMessage('Reading of contours failed. Images must be loaded prior to loading contours')
         warning.exec_()
@@ -53,7 +53,7 @@ def writeContours(window):
     """Writes contours to an xml file compatible with Echoplaque"""
 
     if not window.image:
-        warning = QErrorMessage()
+        warning = QErrorMessage(window)
         warning.setWindowModality(Qt.WindowModal)
         warning.showMessage('Cannot write contours before reading DICOM file')
         warning.exec_()
@@ -105,7 +105,7 @@ def segment(window):
     """Segmentation and phenotyping of IVUS images"""
     window.status_bar.showMessage('Segmenting all gated frames...')
     if not window.image:
-        warning = QErrorMessage()
+        warning = QErrorMessage(window)
         warning.setWindowModality(Qt.WindowModal)
         warning.showMessage('Cannot perform automatic segmentation before reading DICOM file')
         warning.exec_()
@@ -166,7 +166,7 @@ def newSpline(window):
     """Create a message box to choose what spline to create"""
 
     if not window.image:
-        warning = QErrorMessage()
+        warning = QErrorMessage(window)
         warning.setWindowModality(Qt.WindowModal)
         warning.showMessage('Cannot create manual contour before reading DICOM file')
         warning.exec_()

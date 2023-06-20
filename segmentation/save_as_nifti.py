@@ -9,7 +9,7 @@ from input_output.contours import contoursToMask
 
 def save_as_nifti(window):
     if not window.image:
-        warning = QErrorMessage()
+        warning = QErrorMessage(window)
         warning.setWindowModality(Qt.WindowModal)
         warning.showMessage('Cannot save as NIfTI before reading DICOM file')
         warning.exec_()

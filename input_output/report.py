@@ -10,7 +10,7 @@ def report(window):
     """Writes a report file containing lumen area, plaque, area, vessel area, plaque burden, phenotype"""
 
     if not window.image:
-        warning = QErrorMessage()
+        warning = QErrorMessage(window)
         warning.setWindowModality(Qt.WindowModal)
         warning.showMessage('Cannot write report before reading DICOM file')
         warning.exec_()
