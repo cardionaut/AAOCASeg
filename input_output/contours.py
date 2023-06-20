@@ -103,12 +103,13 @@ def reset_contours(window):
 
 def segment(window):
     """Segmentation and phenotyping of IVUS images"""
-
+    window.status_bar.showMessage('Segmenting all gated frames...')
     if not window.image:
         warning = QErrorMessage()
         warning.setWindowModality(Qt.WindowModal)
         warning.showMessage('Cannot perform automatic segmentation before reading DICOM file')
         warning.exec_()
+        window.status_bar.showMessage('Waiting for user input...')
         return
 
     save_path = os.path.join(os.getcwd(), "model", "saved_model.pb")
@@ -123,6 +124,7 @@ def segment(window):
         error.setWindowModality(Qt.WindowModal)
         error.setText(message)
         error.exec_()
+        window.status_bar.showMessage('Waiting for user input...')
         return -1
 
     # warning = QErrorMessage()
@@ -157,6 +159,7 @@ def segment(window):
 
     window.wid.setData(window.lumen, window.plaque, window.stent, window.images)
     window.hideBox.setChecked(False)
+    window.status_bar.showMessage('Waiting for user input...')
 
 
 def newSpline(window):

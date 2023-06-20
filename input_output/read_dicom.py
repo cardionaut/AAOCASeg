@@ -21,6 +21,11 @@ def readDICOM(window):
     Reads the dicom images and metadata. Places metatdata in a table.
     Images are displayed in the graphics scene.
     """
+    if window.image:
+        window.save_before_close()
+
+    window.status_bar.showMessage('Reading DICOM file')
+
     options = QFileDialog.Options()
     options = QFileDialog.DontUseNativeDialog
     # fileName, _ = QFileDialog.getOpenFileName(
@@ -85,6 +90,8 @@ def readDICOM(window):
         except FileNotFoundError:
             window.phases = ['-'] * window.numberOfFrames
             pass
+
+    window.status_bar.showMessage('Waiting for user input...')
 
 
 def parseDICOM(window):

@@ -19,6 +19,7 @@ from PyQt5.QtWidgets import (
     QErrorMessage,
     QMenuBar,
     QMenu,
+    QStatusBar,
 )
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QIcon
@@ -29,6 +30,7 @@ from input_output.read_dicom import readDICOM
 from input_output.contours import readContours, writeContours, segment, newSpline
 from input_output.report import report
 from preprocessing.preprocessing import PreProcessing
+from segmentation.save_as_nifti import save_as_nifti
 
 
 class Master(QMainWindow):
@@ -50,7 +52,7 @@ class Master(QMainWindow):
         self.plaque = ()
         self.gated_frames_dia = []
         self.gated_frames_sys = []
-        self.distance_frames= []
+        self.distance_frames = []
         self.phases = []
         self.initGUI()
 
@@ -64,6 +66,9 @@ class Master(QMainWindow):
         menuBar = QMenuBar(self)
         self.setMenuBar(menuBar)
         helpMenu = menuBar.addMenu('Help')
+        self.status_bar = QStatusBar(self)
+        self.setStatusBar(self.status_bar)
+        self.status_bar.showMessage('Waiting for user input...')
         layout = QHBoxLayout()
         vbox1 = QVBoxLayout()
         vbox2 = QVBoxLayout()
@@ -252,8 +257,20 @@ class Master(QMainWindow):
                 self.hideBox.setChecked(False)
                 self.contours = True
 
+    def closeEvent(self, event):
+        """Tasks to be performed before actually closing the program"""
+        if self.image:
+            self.save_before_close()
+
+    def save_before_close(self):
+        """Save contours, etc before closing program or reading new DICOM file"""
+        self.status_bar.showMessage('Saving contours and NIfTI files...')
+        writeContours(self)
+        save_as_nifti(self)
+        self.status_bar.showMessage('Waiting for user input...')
+
     def play(self):
-        "Plays all frames until end of pullback starting from currently selected frame" ""
+        """Plays all frames until end of pullback starting from currently selected frame"""
         start_frame = self.slider.value()
 
         if self.paused:
