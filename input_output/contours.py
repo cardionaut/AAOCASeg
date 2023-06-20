@@ -199,16 +199,21 @@ def maskToContours(masks):
     return lumen_pred, plaque_pred
 
 
-def contoursToMask(window):
+def contoursToMask(images, lumen, plaque):
     """Convert IVUS contours to numpy mask"""
-    mask = np.zeros_like(window.images)
-    image_shape = window.images.shape[1:3]
-    for frame in range(window.numberOfFrames):
-        if window.lumen[0][frame]:
-            lumen_polygon = [[x, y] for x, y in zip(window.lumen[1][frame], window.lumen[0][frame])]
-            vessel_polygon = [[x, y] for x, y in zip(window.plaque[1][frame], window.plaque[0][frame])]
+    mask = np.zeros_like(images)
+    image_shape = images.shape[1:3]
+    for frame in range(images.shape[0]):
+        try:
+            lumen_polygon = [[x, y] for x, y in zip(lumen[1][frame], lumen[0][frame])]
             mask[frame, :, :] += polygon2mask(image_shape, lumen_polygon).astype(np.uint8)
+        except ValueError:
+            pass
+        try:
+            vessel_polygon = [[x, y] for x, y in zip(plaque[1][frame], plaque[0][frame])]
             mask[frame, :, :] += polygon2mask(image_shape, vessel_polygon).astype(np.uint8) * 2
+        except ValueError:
+            pass
 
     return mask
 
