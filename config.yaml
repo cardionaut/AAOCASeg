@@ -8,7 +8,8 @@ hydra:
   run:  
     dir: .
 
-dir_path: '/home/sebalzer/Documents/Projects/AAOCASeg/2_IVUSimages/RatnamNanthakumaran/20220406/082231/Run3/PD22JZCL'
+root_dir: '/home/sebalzer/Documents/Projects/AAOCASeg/data'
+train: False
 
 filters:
   plot: True

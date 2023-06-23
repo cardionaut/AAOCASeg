@@ -1,113 +1,81 @@
 import os
-import shutil
-import tempfile
+import glob
 import torch
 
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-
+from loguru import logger
 from monai.losses import DiceCELoss
 from monai.inferers import sliding_window_inference
 from monai.transforms import (
-    AsDiscrete,
-    EnsureChannelFirstd,
     Compose,
-    CropForegroundd,
-    LoadImaged,
-    Orientationd,
-    RandFlipd,
-    RandCropByPosNegLabeld,
-    RandShiftIntensityd,
-    ScaleIntensityRanged,
-    Spacingd,
-    RandRotate90d,
+    LoadImage,
+    RandSpatialCrop,
+    ScaleIntensity,
+    EnsureType,
+    AsDiscrete,
 )
-
 from monai.metrics import DiceMetric
 from monai.networks.nets import UNETR
-
 from monai.data import (
     DataLoader,
     CacheDataset,
-    decollate_batch,
+    ArrayDataset,
 )
 
 
 class UNetSegmentation:
-    def __init__(self) -> None:
+    def __init__(self, config) -> None:
+        torch.backends.cudnn.benchmark = True
+        self.cuda = torch.cuda.is_available()
+        self.device = torch.device("cuda" if self.cuda else "cpu")
+        self.input_shape = (512, 512)
+        self.num_classes = 3  # background, lumen, vessel
+        self.root_dir = config.root_dir
         self.init_transforms()
 
     def __call__(self) -> None:
-        pass
+        imgs = sorted(glob.glob(os.path.join(self.root_dir, "*img.nii.gz")))
+        segs = sorted(glob.glob(os.path.join(self.root_dir, "*seg.nii.gz")))
+        dataset = ArrayDataset(imgs, self.img_trafos, segs, self.seg_trafos)
+        train_loader = DataLoader(dataset, batch_size=1, shuffle=True, num_workers=8, pin_memory=self.cuda)
+
+        self.model = UNETR(
+            in_channels=1,
+            out_channels=self.num_classes,
+            img_size=self.input_shape,
+            feature_size=16,
+            hidden_size=768,
+            mlp_dim=3072,
+            num_heads=12,
+            pos_embed="conv",
+            norm_name="instance",
+            res_block=True,
+            dropout_rate=0.0,
+            spatial_dims=2,
+        ).to(self.device)
+
+        self.loss_function = DiceCELoss(to_onehot_y=True, softmax=True)
+        self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=1e-4, weight_decay=1e-5)
+
 
     def init_transforms(self) -> None:
-        self.train_transforms = Compose(
+        self.img_trafos = Compose(
             [
-                LoadImaged(keys=["image", "label"]),
-                EnsureChannelFirstd(keys=["image", "label"]),
-                Orientationd(keys=["image", "label"], axcodes="RAS"),
-                Spacingd(
-                    keys=["image", "label"],
-                    pixdim=(1.5, 1.5, 2.0),
-                    mode=("bilinear", "nearest"),
-                ),
-                ScaleIntensityRanged(
-                    keys=["image"],
-                    a_min=-175,
-                    a_max=250,
-                    b_min=0.0,
-                    b_max=1.0,
-                    clip=True,
-                ),
-                CropForegroundd(keys=["image", "label"], source_key="image"),
-                RandCropByPosNegLabeld(
-                    keys=["image", "label"],
-                    label_key="label",
-                    spatial_size=(96, 96, 96),
-                    pos=1,
-                    neg=1,
-                    num_samples=4,
-                    image_key="image",
-                    image_threshold=0,
-                ),
-                RandFlipd(
-                    keys=["image", "label"],
-                    spatial_axis=[0],
-                    prob=0.10,
-                ),
-                RandFlipd(
-                    keys=["image", "label"],
-                    spatial_axis=[1],
-                    prob=0.10,
-                ),
-                RandFlipd(
-                    keys=["image", "label"],
-                    spatial_axis=[2],
-                    prob=0.10,
-                ),
-                RandRotate90d(
-                    keys=["image", "label"],
-                    prob=0.10,
-                    max_k=3,
-                ),
-                RandShiftIntensityd(
-                    keys=["image"],
-                    offsets=0.10,
-                    prob=0.50,
-                ),
+                LoadImage(image_only=True),
+                ScaleIntensity(),
+                RandSpatialCrop(self.input_shape, random_size=False),
             ]
         )
-        self.val_transforms = Compose(
+        self.seg_trafos = Compose(
             [
-                LoadImaged(keys=["image", "label"]),
-                EnsureChannelFirstd(keys=["image", "label"]),
-                Orientationd(keys=["image", "label"], axcodes="RAS"),
-                Spacingd(
-                    keys=["image", "label"],
-                    pixdim=(1.5, 1.5, 2.0),
-                    mode=("bilinear", "nearest"),
-                ),
-                ScaleIntensityRanged(keys=["image"], a_min=-175, a_max=250, b_min=0.0, b_max=1.0, clip=True),
-                CropForegroundd(keys=["image", "label"], source_key="image"),
+                LoadImage(image_only=True),
+                RandSpatialCrop(self.input_shape, random_size=False),
             ]
         )
+
+    def validation(self):
+        pass
+
+    def train(self):
+        pass
