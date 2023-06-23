@@ -259,7 +259,7 @@ class Master(QMainWindow):
 
     def closeEvent(self, event):
         """Tasks to be performed before actually closing the program"""
-        if self.image:
+        if self.image and self.contours:
             self.save_before_close()
 
     def save_before_close(self):
