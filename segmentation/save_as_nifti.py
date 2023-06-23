@@ -23,6 +23,6 @@ def save_as_nifti(window):
     if contoured_frames:
         out_path = os.path.splitext(window.file_name)[0]  # remove file extension
         mask = contoursToMask(window.images[contoured_frames], window.lumen, window.plaque)
-        write_nifti(mask, filename=f'{out_path}_mask.nii.gz')
-        write_nifti(window.images[contoured_frames, :, :], filename=f'{out_path}.nii.gz')
+        write_nifti(mask, filename=f'{out_path}_seg.nii.gz')
+        write_nifti(window.images[contoured_frames, :, :], filename=f'{out_path}_img.nii.gz')
  
