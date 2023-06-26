@@ -8,8 +8,16 @@ hydra:
   run:  
     dir: .
 
-root_dir: '/home/sebalzer/Documents/Projects/AAOCASeg/data'
+root_dir: '/home/sebalzer/Documents/Projects/AAOCASeg/niftis'
 train: False
+
+segmentation:
+  batch_size: 8
+  num_workers: 8
+  dropout_rate: 0.0
+  learning_rate: 0.0001
+  weight_decay: 0.00001
+  max_epochs: 1000
 
 filters:
   plot: True
