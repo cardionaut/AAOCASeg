@@ -21,7 +21,9 @@ def save_as_nifti(window):
     ]  # find frames with contours (no need to save the others)
 
     if contoured_frames:
-        out_path = os.path.splitext(window.file_name)[0]  # remove file extension
+        file_name = os.path.splitext(os.path.basename(window.file_name))[0]  # remove file extension
+        out_path = os.path.join(os.path.dirname(window.file_name), 'niftis', file_name)
+        os.makedirs(os.path.dirname(out_path), exist_ok=True)
         mask = contoursToMask(window.images[contoured_frames], window.lumen, window.plaque)
         for i, frame in enumerate(contoured_frames):  # save individual frames as NIfTI
             write_nifti(mask[i, :, :], filename=f'{out_path}_frame_{i}_seg.nii.gz')
