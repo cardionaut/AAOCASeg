@@ -18,6 +18,7 @@ segmentation:
   learning_rate: 0.0001
   weight_decay: 0.00001
   max_epochs: 1000
+  train_val_ratio: 0.8
 
 filters:
   plot: True

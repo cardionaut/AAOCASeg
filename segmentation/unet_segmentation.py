@@ -7,6 +7,7 @@ import pytorch_lightning as pl
 from tqdm import tqdm
 from datetime import datetime
 from loguru import logger
+from torch.utils.data import random_split
 from monai.losses import DiceCELoss
 from monai.inferers import sliding_window_inference
 from monai.transforms import (
@@ -36,7 +37,7 @@ class UNetSegmentation:
         self.cuda = False
         self.device = torch.device("cuda" if self.cuda else "cpu")
         self.input_shape = (512, 512)
-        self.num_classes = 3  # background, lumen, vessel
+        self.num_classes = 1  # background, lumen, vessel
 
         self.root_dir = config.root_dir
         self.batch_size = config.segmentation.batch_size
@@ -45,6 +46,7 @@ class UNetSegmentation:
         self.learning_rate = config.segmentation.learning_rate
         self.weight_decay = config.segmentation.weight_decay
         self.max_epochs = config.segmentation.max_epochs
+        self.train_val_ratio = config.segmentation.train_val_ratio
 
         self.init_transforms()
 
@@ -52,10 +54,15 @@ class UNetSegmentation:
         imgs = sorted(glob.glob(os.path.join(self.root_dir, "*frame_*_img.nii.gz")))
         segs = sorted(glob.glob(os.path.join(self.root_dir, "*frame_*_seg.nii.gz")))
         dataset = ArrayDataset(imgs, self.img_trafos, segs, self.seg_trafos)
+        n_train = int(round(self.train_val_ratio * len(imgs)))
+        splits = n_train, len(imgs) - n_train
+        train_dataset, val_dataset = random_split(dataset, splits)
         train_loader = DataLoader(
-            dataset, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers, pin_memory=self.cuda
+            train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers, pin_memory=self.cuda
         )
-
+        val_loader = DataLoader(
+            val_dataset, batch_size=64, shuffle=False, num_workers=self.num_workers, pin_memory=self.cuda
+        )
         net = UNet(
             spatial_dims=2,
             in_channels=1,
@@ -64,7 +71,7 @@ class UNetSegmentation:
             strides=(2, 2),
             dropout=self.dropout_rate,
         )
-        loss_function = DiceCELoss(to_onehot_y=True, softmax=True)
+        loss_function = DiceCELoss(softmax=True)
         optimizer = torch.optim.AdamW
         model = Model(net, loss_function, self.learning_rate, optimizer)
         early_stopping = pl.callbacks.early_stopping.EarlyStopping(monitor='val_loss')
@@ -75,7 +82,7 @@ class UNetSegmentation:
 
         start = datetime.now()
         logger.info(f'Training started at {start}')
-        trainer.fit(model=model, train_dataloaders=train_loader)
+        trainer.fit(model=model, train_dataloaders=train_loader, val_dataloaders=val_loader)
         logger.info(f'Training duration: {datetime.now() - start}')
 
     def init_transforms(self) -> None:
@@ -91,6 +98,7 @@ class UNetSegmentation:
             [
                 LoadImage(image_only=True),
                 EnsureChannelFirst(),
+                # AsDiscrete(to_onehot=self.num_classes)
                 # RandSpatialCrop(self.input_shape, random_size=False),
             ]
         )

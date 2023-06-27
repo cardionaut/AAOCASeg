@@ -4,6 +4,8 @@ from loguru import logger
 from monailabel.transform.writer import write_nifti
 from PyQt5.QtWidgets import QErrorMessage
 from PyQt5.QtCore import Qt
+from torch import from_numpy
+from torch.nn.functional import one_hot
 
 from input_output.contours import contoursToMask
 
