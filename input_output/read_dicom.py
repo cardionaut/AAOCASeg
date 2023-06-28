@@ -24,7 +24,7 @@ def readDICOM(window):
     if window.image:
         window.save_before_close()
 
-    window.status_bar.showMessage('Reading DICOM file')
+    window.status_bar.showMessage('Reading DICOM file...')
 
     options = QFileDialog.Options()
     options = QFileDialog.DontUseNativeDialog
@@ -91,7 +91,7 @@ def readDICOM(window):
             window.phases = ['-'] * window.numberOfFrames
             pass
 
-    window.status_bar.showMessage('Waiting for user input...')
+    window.status_bar.showMessage('Waiting for user input')
 
 
 def parseDICOM(window):

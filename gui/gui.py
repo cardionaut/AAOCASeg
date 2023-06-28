@@ -267,7 +267,7 @@ class Master(QMainWindow):
         self.status_bar.showMessage('Saving contours and NIfTI files...')
         writeContours(self)
         save_as_nifti(self)
-        self.status_bar.showMessage('Waiting for user input...')
+        self.status_bar.showMessage('Waiting for user input')
 
     def play(self):
         """Plays all frames until end of pullback starting from currently selected frame"""

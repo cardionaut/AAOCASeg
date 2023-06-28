@@ -28,12 +28,18 @@ from monai.data import (
 
 from segmentation.model import Model
 
+# useful logger output to check cuda + cudnn installation
+# logger.debug(torch.cuda.is_available())
+# logger.debug(torch.cuda.device_count())
+# logger.debug(torch.backends.cudnn.enabled)
+# logger.debug(torch.backends.cudnn.version())
+
 
 class UNetSegmentation:
     def __init__(self, config) -> None:
         torch.backends.cudnn.benchmark = True
-        # self.cuda = torch.cuda.is_available()
-        self.cuda = False
+        self.cuda = torch.cuda.is_available()
+        # self.cuda = False
         self.device = torch.device("cuda" if self.cuda else "cpu")
         self.input_shape = (512, 512)
         self.num_classes = 3  # background, lumen, vessel
@@ -75,7 +81,7 @@ class UNetSegmentation:
         model = Model(net, loss_function, self.learning_rate, optimizer)
         early_stopping = pl.callbacks.early_stopping.EarlyStopping(monitor='val_loss')
         accelerator = 'gpu' if self.cuda else 'cpu'
-        devices = 1 # if self.cuda else self.num_workers
+        devices = 1  # if self.cuda else self.num_workers
         trainer = pl.Trainer(
             callbacks=[early_stopping],
             accelerator=accelerator,
