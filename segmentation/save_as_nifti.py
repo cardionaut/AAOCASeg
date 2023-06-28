@@ -24,12 +24,9 @@ def save_as_nifti(window):
         file_name = os.path.splitext(os.path.basename(window.file_name))[0]  # remove file extension
         out_path = os.path.join(os.path.dirname(window.file_name), 'niftis', file_name)
         os.makedirs(os.path.dirname(out_path), exist_ok=True)
-        mask = contoursToMask(window.images[contoured_frames], window.lumen, window.plaque, window.one_hot)
+        mask = contoursToMask(window.images[contoured_frames], window.lumen, window.plaque)
         for i, frame in enumerate(contoured_frames):  # save individual frames as NIfTI
-            if window.one_hot:
-                write_nifti(mask[i, :, :, :], filename=f'{out_path}_frame_{i}_seg_one_hot.nii.gz')
-            else:
-                write_nifti(mask[i, :, :], filename=f'{out_path}_frame_{i}_seg.nii.gz')
+            write_nifti(mask[i, :, :], filename=f'{out_path}_frame_{i}_seg.nii.gz')
             write_nifti(window.images[frame, :, :], filename=f'{out_path}_frame_{i}_img.nii.gz')
 
         # save entire stack as NIfTI

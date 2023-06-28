@@ -13,7 +13,6 @@ from monai.inferers import sliding_window_inference
 from monai.transforms import (
     Compose,
     LoadImage,
-    EnsureChannelFirst,
     RandSpatialCrop,
     ScaleIntensity,
     EnsureType,
@@ -37,9 +36,7 @@ class UNetSegmentation:
         self.cuda = False
         self.device = torch.device("cuda" if self.cuda else "cpu")
         self.input_shape = (512, 512)
-        self.one_hot = config.segmentation.one_hot
         self.num_classes = 3  # background, lumen, vessel
-        self.seg_substring = '_one_hot' if self.one_hot else ''
 
         self.root_dir = config.root_dir
         self.batch_size = config.segmentation.batch_size
@@ -54,7 +51,7 @@ class UNetSegmentation:
 
     def __call__(self) -> None:
         imgs = sorted(glob.glob(os.path.join(self.root_dir, "*frame_*_img.nii.gz")))
-        segs = sorted(glob.glob(os.path.join(self.root_dir, f"*frame_*_seg{self.seg_substring}.nii.gz")))
+        segs = sorted(glob.glob(os.path.join(self.root_dir, "*frame_*_seg.nii.gz")))
         dataset = ArrayDataset(imgs, self.img_trafos, segs, self.seg_trafos)
         n_train = int(round(self.train_val_ratio * len(imgs)))
         splits = n_train, len(imgs) - n_train
@@ -102,7 +99,7 @@ class UNetSegmentation:
         )
         self.seg_trafos = Compose(
             [
-                LoadImage(image_only=True, ensure_channel_first=(not self.one_hot)),
+                LoadImage(image_only=True, ensure_channel_first=True),
                 AsDiscrete(to_onehot=self.num_classes)
                 # RandSpatialCrop(self.input_shape, random_size=False),
             ]

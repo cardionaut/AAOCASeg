@@ -202,44 +202,22 @@ def maskToContours(masks):
     return lumen_pred, plaque_pred
 
 
-def contoursToMask(images, lumen, plaque, one_hot):
+def contoursToMask(images, lumen, plaque):
     """Convert IVUS contours to numpy mask"""
     image_shape = images.shape[1:3]
-
-    if one_hot:
-        background_mask = np.ones_like(images)
-        lumen_mask = np.zeros_like(images)
-        vessel_mask = np.zeros_like(images)
-        for frame in range(images.shape[0]):
-            try:
-                lumen_polygon = [[x, y] for x, y in zip(lumen[1][frame], lumen[0][frame])]
-                lumen_mask[frame, :, :] += polygon2mask(image_shape, lumen_polygon).astype(np.uint8)
-            except ValueError:
-                pass
-            try:
-                vessel_polygon = [[x, y] for x, y in zip(plaque[1][frame], plaque[0][frame])]
-                vessel_mask[frame, :, :] += polygon2mask(image_shape, vessel_polygon).astype(np.uint8)
-            except ValueError:
-                pass
-        
-        background_mask = np.sum((background_mask, -np.sum((lumen_mask, vessel_mask), axis=0)), axis=0)
-        mask = np.stack([background_mask, lumen_mask, vessel_mask], axis=1)
-        mask = np.clip(mask, a_min=0, a_max=1)  # enforce correct value range
-        
-    else:
-        mask = np.zeros_like(images)
-        for frame in range(images.shape[0]):
-            try:
-                lumen_polygon = [[x, y] for x, y in zip(lumen[1][frame], lumen[0][frame])]
-                mask[frame, :, :] += polygon2mask(image_shape, lumen_polygon).astype(np.uint8)
-            except ValueError:
-                pass
-            try:
-                vessel_polygon = [[x, y] for x, y in zip(plaque[1][frame], plaque[0][frame])]
-                mask[frame, :, :] += polygon2mask(image_shape, vessel_polygon).astype(np.uint8) * 2
-            except ValueError:
-                pass
-        mask = np.clip(mask, a_min=0, a_max=2)  # enforce correct value range
+    mask = np.zeros_like(images)
+    for frame in range(images.shape[0]):
+        try:
+            lumen_polygon = [[x, y] for x, y in zip(lumen[1][frame], lumen[0][frame])]
+            mask[frame, :, :] += polygon2mask(image_shape, lumen_polygon).astype(np.uint8)
+        except ValueError:
+            pass
+        try:
+            vessel_polygon = [[x, y] for x, y in zip(plaque[1][frame], plaque[0][frame])]
+            mask[frame, :, :] += polygon2mask(image_shape, vessel_polygon).astype(np.uint8) * 2
+        except ValueError:
+            pass
+    mask = np.clip(mask, a_min=0, a_max=2)  # enforce correct value range
 
     return mask
 

@@ -12,7 +12,6 @@ root_dir: '/home/sebalzer/Documents/Projects/AAOCASeg/niftis'
 train: False
 
 segmentation:
-  one_hot: False
   batch_size: 8
   num_workers: 24
   dropout_rate: 0.0
