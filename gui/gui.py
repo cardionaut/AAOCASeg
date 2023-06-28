@@ -44,8 +44,9 @@ class Master(QMainWindow):
         plaque: tuple, contours for plaque border
     """
 
-    def __init__(self):
+    def __init__(self, config):
         super().__init__()
+        self.one_hot = config.segmentation.one_hot
         self.image = False
         self.contours = False
         self.lumen = ()

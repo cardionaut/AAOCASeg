@@ -37,7 +37,9 @@ class UNetSegmentation:
         self.cuda = False
         self.device = torch.device("cuda" if self.cuda else "cpu")
         self.input_shape = (512, 512)
-        self.num_classes = 1  # background, lumen, vessel
+        self.one_hot = config.segmentation.one_hot
+        self.num_classes = 3  # background, lumen, vessel
+        self.seg_substring = '_one_hot' if self.one_hot else ''
 
         self.root_dir = config.root_dir
         self.batch_size = config.segmentation.batch_size
@@ -52,7 +54,7 @@ class UNetSegmentation:
 
     def __call__(self) -> None:
         imgs = sorted(glob.glob(os.path.join(self.root_dir, "*frame_*_img.nii.gz")))
-        segs = sorted(glob.glob(os.path.join(self.root_dir, "*frame_*_seg.nii.gz")))
+        segs = sorted(glob.glob(os.path.join(self.root_dir, f"*frame_*_seg{self.seg_substring}.nii.gz")))
         dataset = ArrayDataset(imgs, self.img_trafos, segs, self.seg_trafos)
         n_train = int(round(self.train_val_ratio * len(imgs)))
         splits = n_train, len(imgs) - n_train
@@ -76,8 +78,13 @@ class UNetSegmentation:
         model = Model(net, loss_function, self.learning_rate, optimizer)
         early_stopping = pl.callbacks.early_stopping.EarlyStopping(monitor='val_loss')
         accelerator = 'gpu' if self.cuda else 'cpu'
+        devices = 1 # if self.cuda else self.num_workers
         trainer = pl.Trainer(
-            callbacks=[early_stopping], accelerator=accelerator, max_epochs=self.max_epochs, log_every_n_steps=2
+            callbacks=[early_stopping],
+            accelerator=accelerator,
+            devices=devices,
+            max_epochs=self.max_epochs,
+            log_every_n_steps=2,
         )
 
         start = datetime.now()
@@ -88,17 +95,15 @@ class UNetSegmentation:
     def init_transforms(self) -> None:
         self.img_trafos = Compose(
             [
-                LoadImage(image_only=True),
-                EnsureChannelFirst(),
+                LoadImage(image_only=True, ensure_channel_first=True),
                 ScaleIntensity(),
                 # RandSpatialCrop(self.input_shape, random_size=False),
             ]
         )
         self.seg_trafos = Compose(
             [
-                LoadImage(image_only=True),
-                EnsureChannelFirst(),
-                # AsDiscrete(to_onehot=self.num_classes)
+                LoadImage(image_only=True, ensure_channel_first=(not self.one_hot)),
+                AsDiscrete(to_onehot=self.num_classes)
                 # RandSpatialCrop(self.input_shape, random_size=False),
             ]
         )
